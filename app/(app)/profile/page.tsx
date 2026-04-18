@@ -1,6 +1,6 @@
 "use client";
 
-import { AppHeader } from "@/components/layout/AppHeader";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { useSchedule } from "@/components/providers/ScheduleProvider";
@@ -12,85 +12,86 @@ export default function ProfilePage() {
   const { clearDraft, sync } = useSchedule();
 
   return (
-    <div className="flex flex-1 flex-col pb-28 lg:pb-8">
-      <AppHeader title="Profile" subtitle="Cài đặt nhanh" />
-      <main className="mx-auto w-full max-w-md space-y-3 px-4 pt-4 lg:max-w-6xl lg:space-y-0 lg:px-6 lg:pt-4">
-        <div className="grid gap-3 md:grid-cols-2 lg:gap-4">
-          <Card>
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
-              Giao diện
-            </p>
-            <div className="mt-3 flex gap-2">
-              <Button
-                variant={theme === "light" ? "primary" : "secondary"}
-                className="flex-1"
-                onClick={() => setTheme("light")}
-              >
-                <Sun className="mr-2 h-4 w-4" /> Sáng
-              </Button>
-              <Button
-                variant={theme === "dark" ? "primary" : "secondary"}
-                className="flex-1"
-                onClick={() => setTheme("dark")}
-              >
-                <Moon className="mr-2 h-4 w-4" /> Tối
-              </Button>
-            </div>
-          </Card>
+    <div>
+      <PageHeader
+        title="Settings"
+        description="Giao diện, đồng bộ và dữ liệu cục bộ."
+      />
 
-          <Card>
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
-              Đồng bộ
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-              {sync.cloudEnabled ? (
-                <>
-                  <span className="font-medium text-emerald-700 dark:text-emerald-400">
-                    Supabase Realtime
-                  </span>
-                  {" — "}
-                  thay đổi được đẩy lên cloud; các thiết bị/tab khác nhận cập nhật
-                  gần như tức thì (sau debounce ~300ms).
-                </>
-              ) : (
-                <>
-                  Chưa cấu hình{" "}
-                  <code className="rounded bg-slate-100 px-1 text-xs dark:bg-slate-800">
-                    NEXT_PUBLIC_SUPABASE_*
-                  </code>
-                  . Dữ liệu chỉ lưu trên trình duyệt này; đồng bộ giữa các tab
-                  cùng máy qua BroadcastChannel + sự kiện storage.
-                </>
-              )}
-            </p>
-            {sync.cloudEnabled && sync.lastRemoteAt ? (
-              <p className="mt-2 text-xs text-slate-500 dark:text-slate-500">
-                Lần đồng bộ server gần nhất:{" "}
-                {new Date(sync.lastRemoteAt).toLocaleString("vi-VN")}
-              </p>
-            ) : null}
-            {sync.error ? (
-              <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                Lỗi đồng bộ: {sync.error}
-              </p>
-            ) : null}
-            <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-              Luôn có bản sao cục bộ (localStorage) để mở nhanh khi offline.
-            </p>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="p-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Giao diện
+          </p>
+          <div className="mt-4 flex gap-3">
             <Button
-              variant="danger"
-              className="mt-4 w-full"
-              onClick={() => {
-                if (!confirm("Xoá toàn bộ nháp?")) return;
-                if (!confirm("Xác nhận lần 2.")) return;
-                clearDraft();
-              }}
+              variant={theme === "light" ? "primary" : "secondary"}
+              className="flex-1"
+              onClick={() => setTheme("light")}
             >
-              Xoá dữ liệu cục bộ
+              <Sun className="mr-2 h-4 w-4" /> Sáng
             </Button>
-          </Card>
-        </div>
-      </main>
+            <Button
+              variant={theme === "dark" ? "primary" : "secondary"}
+              className="flex-1"
+              onClick={() => setTheme("dark")}
+            >
+              <Moon className="mr-2 h-4 w-4" /> Tối
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Đồng bộ
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+            {sync.cloudEnabled ? (
+              <>
+                <span className="font-medium text-emerald-700 dark:text-emerald-400">
+                  Supabase Realtime
+                </span>
+                {" — "}
+                thay đổi đẩy lên cloud; thiết bị khác nhận cập nhật gần thời
+                gian thực.
+              </>
+            ) : (
+              <>
+                Chưa cấu hình{" "}
+                <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
+                  NEXT_PUBLIC_SUPABASE_*
+                </code>
+                . Đồng bộ giữa tab cùng máy qua BroadcastChannel.
+              </>
+            )}
+          </p>
+          {sync.cloudEnabled && sync.lastRemoteAt ? (
+            <p className="mt-3 text-xs text-zinc-500">
+              Lần đồng bộ server:{" "}
+              {new Date(sync.lastRemoteAt).toLocaleString("vi-VN")}
+            </p>
+          ) : null}
+          {sync.error ? (
+            <p className="mt-3 text-xs text-red-600 dark:text-red-400">
+              {sync.error}
+            </p>
+          ) : null}
+          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+            Luôn có bản sao localStorage để mở nhanh khi offline.
+          </p>
+          <Button
+            variant="danger"
+            className="mt-6 w-full"
+            onClick={() => {
+              if (!confirm("Xoá toàn bộ nháp?")) return;
+              if (!confirm("Xác nhận lần 2.")) return;
+              clearDraft();
+            }}
+          >
+            Xoá dữ liệu cục bộ
+          </Button>
+        </Card>
+      </div>
     </div>
   );
 }
