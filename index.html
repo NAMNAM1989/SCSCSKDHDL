@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bảng Cut-off SCSC</title>
+  <script src="xlsx.full.min.js"></script>
+  <script src="exceljs.min.js"></script>
+  <script src="skdhdl-template-b64.js"></script>
+  <style>
+    /* ========== SCREEN (dark theme) ========== */
+    @media screen {
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --card: #1a2332;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --header-bg: #21262d;
+        --row-alt: rgba(255, 255, 255, 0.02);
+        --yellow-hd: #d4a017;
+        --danger: #f85149;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.45;
+        padding: 0.75rem 1rem 2rem;
+      }
+      .print-only { display: none !important; }
+      .top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .top h1 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+      .top-tools { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+      .meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.65rem; }
+      .meta-row label { font-size: 0.8rem; color: var(--muted); }
+      .meta-row input#updatedDate {
+        width: 7rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font-family: ui-monospace, monospace;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.65rem;
+      }
+      .toolbar input[type="search"] {
+        flex: 1 1 14rem;
+        min-width: 10rem;
+        padding: 0.4rem 0.55rem;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+      }
+      .btn {
+        padding: 0.4rem 0.65rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.85rem;
+        touch-action: manipulation;
+      }
+      .btn:hover { color: var(--text); border-color: var(--accent); }
+      .btn-danger:hover { border-color: var(--danger); color: var(--danger); }
+      .table-scroll {
+        overflow: auto;
+        max-height: calc(100vh - 200px);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+      table.screen-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: max-content;
+        min-width: 100%;
+        font-size: 0.78rem;
+      }
+      table.screen-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--header-bg);
+        color: var(--yellow-hd);
+        font-weight: 700;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.45rem 0.35rem;
+        border-bottom: 2px solid var(--yellow-hd);
+        border-right: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      table.screen-table tbody tr:nth-child(even) td { background: var(--row-alt); }
+      table.screen-table td {
+        border-bottom: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+        padding: 0.15rem;
+        vertical-align: middle;
+      }
+      table.screen-table input.cell-in {
+        width: 100%;
+        min-width: 2.8rem;
+        max-width: 7rem;
+        padding: 0.28rem 0.35rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 4px;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 0.78rem;
+        font-family: ui-monospace, monospace;
+      }
+      table.screen-table input.cell-in:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.25);
+      }
+      /* Ô khác giá trị mẫu gốc (Excel / baseline) — đỏ nhạt */
+      table.screen-table input.cell-in.cell-changed {
+        border-color: rgba(248, 81, 73, 0.85) !important;
+        background: rgba(248, 81, 73, 0.14) !important;
+        color: #ffd6d4 !important;
+        box-shadow: inset 0 0 0 1px rgba(248, 81, 73, 0.35);
+      }
+      .legend-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-bottom: 0.45rem;
+      }
+      .legend-row .sw {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        border: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      .legend-row .sw.ch { background: rgba(248, 81, 73, 0.35); border-color: #f85149; }
+      table.screen-table .col-idx {
+        width: 2rem;
+        text-align: center;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      table.screen-table .col-drag { cursor: grab; user-select: none; color: var(--muted); width: 1.5rem; text-align: center; }
+      table.screen-table tr[draggable="true"] .col-drag:active { cursor: grabbing; }
+      table.screen-table .col-ops { text-align: center; min-width: 2rem; padding: 0.1rem !important; }
+      .ops-check {
+        width: 1.75rem;
+        height: 1.55rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        color: var(--accent);
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 0.75rem;
+        padding: 0;
+      }
+      .ops-check.has-x { color: #3fb950; }
+      .ops-text {
+        width: 3.2rem;
+        min-width: 2.5rem;
+        padding: 0.2rem;
+        font-size: 0.72rem;
+        border: 1px solid var(--yellow-hd);
+        border-radius: 4px;
+        background: var(--bg);
+        color: var(--text);
+      }
+      table.screen-table .col-del { text-align: center; width: 2.5rem; }
+      .btn-row-del { padding: 0.2rem 0.35rem; font-size: 0.85rem; border: none; background: transparent; cursor: pointer; }
+      .btn-row-del:hover { color: var(--danger); }
+      tr.row-hidden { display: none !important; }
+      .hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.5rem; }
+    }
+
+    /* ========== PRINT (PDF) ========== */
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 1cm;
+      }
+      body {
+        background: #fff !important;
+        color: #000 !important;
+        padding: 0 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+
+      .pdf-banner {
+        display: flex !important;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 0.35rem;
+        padding-bottom: 0.25rem;
+        border-bottom: 2px solid #000;
+      }
+      .pdf-banner__left {
+        font-weight: 700;
+        font-size: 11pt;
+        color: #000 !important;
+      }
+      .pdf-banner__center { flex: 1; text-align: center; min-width: 0; }
+      .pdf-banner__title {
+        font-size: 16pt;
+        font-weight: 700;
+        color: #c00000 !important;
+        margin: 0;
+        line-height: 1.15;
+      }
+      .pdf-banner__updated {
+        margin-top: 0.15rem;
+        font-size: 11pt;
+        font-weight: 700;
+        color: #00b050 !important;
+        text-decoration: underline;
+      }
+      .pdf-banner__right {
+        font-size: 10pt;
+        font-weight: 700;
+        color: #000 !important;
+        white-space: nowrap;
+      }
+
+      .pdf-table-wrap { margin-top: 0.2rem; overflow: visible; }
+      table.pdf-table {
+        width: 100%;
+        border-collapse: collapse !important;
+        font-size: 10pt;
+        table-layout: fixed;
+      }
+      table.pdf-table th,
+      table.pdf-table td {
+        border: 1px solid #000 !important;
+        padding: 0.12rem 0.18rem !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        word-wrap: break-word;
+      }
+      table.pdf-table thead th {
+        background: #ffff00 !important;
+        color: #000 !important;
+        font-weight: 700 !important;
+        font-size: 11pt !important;
+      }
+      table.pdf-table thead th.sun-col,
+      table.pdf-table tbody td.sun-col {
+        background: #fce4e4 !important;
+      }
+      table.pdf-table tbody td {
+        font-size: 10pt;
+        background: #fff !important;
+      }
+      table.pdf-table tbody tr:nth-child(even) td:not(.sun-col) {
+        background: #fff !important;
+      }
+      table.pdf-table td.remark-col {
+        text-align: left !important;
+        font-size: 9pt !important;
+        white-space: normal !important;
+      }
+      .pdf-na {
+        color: #e06666 !important;
+        font-style: italic !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Khu vực in — chỉ hiện khi print -->
+  <div id="printRoot" class="print-only" aria-hidden="true"></div>
+
+  <div class="no-print">
+    <header class="top">
+      <h1>Bảng Cut-off SCSC</h1>
+      <div class="top-tools">
+        <button type="button" class="btn" id="btnPrint">🖨 In PDF</button>
+        <button type="button" class="btn" id="btnExportExcel" title="Xuất theo file mẫu EXP SKDHDL (màu, viền, merge) — cần exceljs.min.js + skdhdl-template-b64.js">⬇ In Excel</button>
+        <button type="button" class="btn" id="btnExport">⬇ Export JSON</button>
+        <button type="button" class="btn" id="btnImport">⬆ Import JSON</button>
+        <button type="button" class="btn" id="btnImportExcel" title="Mẫu: sheet đầu, dòng có Flt Nbr + STD + cut-off + Mon…Sun">⬆ Import Excel</button>
+        <input type="file" id="importFile" accept=".json,application/json" tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;opacity:0;left:-99px" />
+        <input type="file" id="importExcelFile" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;opacity:0;left:-99px" />
+      </div>
+    </header>
+
+    <div class="meta-row">
+      <label for="updatedDate">UPDATED:</label>
+      <input type="text" id="updatedDate" placeholder="08APR26" maxlength="12" autocomplete="off" />
+    </div>
+
+    <div class="legend-row no-print">
+      <span><span class="sw ch"></span> Đỏ: ô khác <strong>mẫu gốc</strong> (giá trị sau khi đổi STD so với Excel / baseline). Đổi STD → các cut-off tự tính lại theo <strong>phút trước STD</strong> đã lưu từ mẫu.</span>
+    </div>
+    <div class="toolbar">
+      <span aria-hidden="true">🔍</span>
+      <input type="search" id="filterInput" placeholder="Lọc nhanh (Flt, A/C, RTG…)" autocomplete="off" />
+      <button type="button" class="btn" id="btnAddRow">+ Thêm dòng</button>
+      <button type="button" class="btn btn-danger" id="btnClearDraft">🗑 Xoá nháp</button>
+    </div>
+
+    <div class="table-scroll">
+      <table class="screen-table" id="screenTable">
+        <thead>
+          <tr>
+            <th class="col-drag" title="Kéo để sắp xếp"></th>
+            <th class="col-idx">#</th>
+            <th>Flt Nbr</th>
+            <th>A/C</th>
+            <th>RTG</th>
+            <th>STD</th>
+            <th>GEN</th>
+            <th>PER</th>
+            <th>DOC</th>
+            <th>Trs</th>
+            <th>B/U</th>
+            <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+            <th>Remark</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="hint">Lưu tự động (300ms). Tab / Shift+Tab / Enter / mũi tên. Ô OPS: click = X; Shift+click hoặc double-click = gõ chữ. <strong>Import Excel</strong>: file .xlsx cùng cấu trúc lịch bay (Flt Nbr, STD, GEN/PER/DOC/Transit/B·U, Mon–Sun, Remark).</p>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+
+  /* ===== Storage — localStorage + debounce ===== */
+  var STORAGE_KEY = "cutoff-scsc-rows-v2";
+  var META_KEY = "cutoff-scsc-meta-v2";
+  var saveTimer = null;
+  var SAVE_MS = 300;
+
+  var OPS_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  var TIME_FIELDS = ["std", "gen", "per", "doc", "transit", "bu"];
+
+  function newRowId() {
+    return "r-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function emptyOps() {
+    return { mon: "", tue: "", wed: "", thu: "", fri: "", sat: "", sun: "" };
+  }
+
+  function normalizeOps(o) {
+    o = o && typeof o === "object" ? o : {};
+    var out = emptyOps();
+    for (var i = 0; i < OPS_KEYS.length; i++) {
+      var k = OPS_KEYS[i];
+      out[k] = o[k] != null ? String(o[k]) : "";
+    }
+    return out;
+  }
+
+  function cloneOrig(o) {
+    if (!o || typeof o !== "object") return null;
+    return {
+      std: o.std != null ? String(o.std) : "",
+      gen: o.gen != null ? String(o.gen) : "",
+      per: o.per != null ? String(o.per) : "",
+      doc: o.doc != null ? String(o.doc) : "",
+      transit: o.transit != null ? String(o.transit) : "",
+      bu: o.bu != null ? String(o.bu) : ""
+    };
+  }
+
+  function cloneMb(m) {
+    if (!m || typeof m !== "object") return null;
+    return {
+      gen: m.gen != null && m.gen !== "" ? Number(m.gen) : null,
+      per: m.per != null && m.per !== "" ? Number(m.per) : null,
+      doc: m.doc != null && m.doc !== "" ? Number(m.doc) : null,
+      transit: m.transit != null && m.transit !== "" ? Number(m.transit) : null,
+      bu: m.bu != null && m.bu !== "" ? Number(m.bu) : null
+    };
+  }
+
+  function normalizeRow(r) {
+    if (!r || typeof r !== "object") return null;
+    return {
+      id: typeof r.id === "string" && r.id ? r.id : newRowId(),
+      flt: r.flt != null ? String(r.flt) : "",
+      ac: r.ac != null ? String(r.ac) : "",
+      rtg: r.rtg != null ? String(r.rtg) : "",
+      std: r.std != null ? String(r.std) : "",
+      gen: r.gen != null ? String(r.gen) : "",
+      per: r.per != null ? String(r.per) : "",
+      doc: r.doc != null ? String(r.doc) : "",
+      transit: r.transit != null ? String(r.transit) : "",
+      bu: r.bu != null ? String(r.bu) : "",
+      ops: normalizeOps(r.ops),
+      remark: r.remark != null ? String(r.remark) : "",
+      orig: cloneOrig(r.orig),
+      mb: cloneMb(r.mb)
+    };
+  }
+
+  /** Baseline mẫu gốc + phút trước STD (từ Excel / lần chốt đầu) */
+  function snapshotOrigAndMb(row) {
+    row.orig = {
+      std: row.std || "",
+      gen: row.gen || "",
+      per: row.per || "",
+      doc: row.doc || "",
+      transit: row.transit || "",
+      bu: row.bu || ""
+    };
+    row.mb = { gen: null, per: null, doc: null, transit: null, bu: null };
+    if (!row.orig.std) return;
+    var cuts = ["gen", "per", "doc", "transit", "bu"];
+    for (var i = 0; i < cuts.length; i++) {
+      var f = cuts[i];
+      var val = row.orig[f];
+      if (!val || isNAVal(val)) {
+        row.mb[f] = null;
+        continue;
+      }
+      row.mb[f] = minutesBefore(row.orig.std, val);
+    }
+  }
+
+  function rowHasBaseline(row) {
+    return !!(row.orig && String(row.orig.std || "").trim() !== "");
+  }
+
+  /** Chỉ tính lại mb từ orig (không ghi đè orig) — dùng khi migrate dữ liệu cũ thiếu mb */
+  function recomputeMbFromOrig(row) {
+    if (!row.orig) return;
+    row.mb = { gen: null, per: null, doc: null, transit: null, bu: null };
+    var std = row.orig.std || "";
+    if (!String(std).trim()) return;
+    var cuts = ["gen", "per", "doc", "transit", "bu"];
+    for (var i = 0; i < cuts.length; i++) {
+      var f = cuts[i];
+      var val = row.orig[f];
+      if (!val || isNAVal(val)) {
+        row.mb[f] = null;
+        continue;
+      }
+      row.mb[f] = minutesBefore(std, val);
+    }
+  }
+
+  function recalcCutoffsFromMb(row) {
+    if (!row.mb || !row.std) return;
+    var cuts = ["gen", "per", "doc", "transit", "bu"];
+    for (var i = 0; i < cuts.length; i++) {
+      var f = cuts[i];
+      if (row.mb[f] == null) continue;
+      var v = applyBefore(row.std, row.mb[f]);
+      if (v) row[f] = v;
+    }
+  }
+
+  function migrateRow(row) {
+    if (!row.orig) {
+      snapshotOrigAndMb(row);
+      return;
+    }
+    if (!row.mb || typeof row.mb !== "object") {
+      recomputeMbFromOrig(row);
+      return;
+    }
+    var cuts = ["gen", "per", "doc", "transit", "bu"];
+    var hasMb = false;
+    for (var i = 0; i < cuts.length; i++) {
+      if (row.mb[cuts[i]] != null) {
+        hasMb = true;
+        break;
+      }
+    }
+    if (!hasMb && String(row.orig.std || "").trim()) {
+      recomputeMbFromOrig(row);
+    }
+  }
+
+  function fieldDiffersOrig(row, field) {
+    if (!row.orig) return false;
+    var a = String(row[field] != null ? row[field] : "").trim();
+    var b = String(row.orig[field] != null ? row.orig[field] : "").trim();
+    if (isNAVal(a) && isNAVal(b)) return false;
+    return a !== b;
+  }
+
+  function updateChangedHighlight(tr, row) {
+    if (!tr || !row.orig) return;
+    var track = ["std", "gen", "per", "doc", "transit", "bu"];
+    var inputs = tr.querySelectorAll("input.cell-in[data-field]");
+    for (var i = 0; i < inputs.length; i++) {
+      var inp = inputs[i];
+      var f = inp.getAttribute("data-field");
+      if (track.indexOf(f) === -1) continue;
+      inp.classList.toggle("cell-changed", fieldDiffersOrig(row, f));
+    }
+  }
+
+  var SEED_ROWS = [
+    {
+      flt: "VJ811",
+      ac: "A321",
+      rtg: "SGN-SIN",
+      std: "06:00",
+      gen: "04:00",
+      per: "",
+      doc: "",
+      transit: "",
+      bu: "05:00",
+      ops: { mon: "X", tue: "X", wed: "X", thu: "X", fri: "X", sat: "X", sun: "X" },
+      remark: ""
+    },
+    {
+      flt: "CV7856",
+      ac: "B747F",
+      rtg: "SGN-LUX",
+      std: "01:25",
+      gen: "19:25",
+      per: "N/A",
+      doc: "N/A",
+      transit: "N/A",
+      bu: "21:25",
+      ops: { mon: "", tue: "", wed: "", thu: "", fri: "", sat: "", sun: "X" },
+      remark: ""
+    },
+    {
+      flt: "TG551",
+      ac: "A320",
+      rtg: "SGN-BKK",
+      std: "08:30",
+      gen: "06:30",
+      per: "",
+      doc: "",
+      transit: "",
+      bu: "07:00",
+      ops: { mon: "X", tue: "X", wed: "X", thu: "X", fri: "X", sat: "X", sun: "X" },
+      remark: ""
+    }
+  ];
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      var metaRaw = localStorage.getItem(META_KEY);
+      var rows = [];
+      if (raw) {
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          for (var i = 0; i < arr.length; i++) {
+            var n = normalizeRow(arr[i]);
+            if (n) rows.push(n);
+          }
+        }
+      }
+      if (!rows.length) {
+        for (var s = 0; s < SEED_ROWS.length; s++) {
+          var b = normalizeRow(SEED_ROWS[s]);
+          b.id = newRowId();
+          rows.push(b);
+        }
+      }
+      var meta = { updatedDate: "08APR26" };
+      if (metaRaw) {
+        var m = JSON.parse(metaRaw);
+        if (m && typeof m.updatedDate === "string") meta.updatedDate = m.updatedDate;
+      }
+      for (var mi = 0; mi < rows.length; mi++) {
+        migrateRow(rows[mi]);
+      }
+      return { rows: rows, meta: meta };
+    } catch (e) {
+      var fallback = SEED_ROWS.map(function (x) {
+        var n = normalizeRow(x);
+        n.id = newRowId();
+        return n;
+      });
+      for (var fj = 0; fj < fallback.length; fj++) {
+        migrateRow(fallback[fj]);
+      }
+      return {
+        rows: fallback,
+        meta: { updatedDate: "08APR26" }
+      };
+    }
+  }
+
+  function persistNow(state) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.rows));
+      localStorage.setItem(META_KEY, JSON.stringify(state.meta));
+    } catch (e) {}
+  }
+
+  function scheduleSave(state) {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      saveTimer = null;
+      persistNow(state);
+    }, SAVE_MS);
+  }
+
+  /* ===== Parser — copy từ file cũ (pad2, parseHM, formatHM) + format ô thời gian ===== */
+  function pad2(n) {
+    n = Math.floor(n);
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  function parseHM(s) {
+    if (!s || typeof s !== "string") return null;
+    var p = s.trim().split(":");
+    if (p.length < 2) return null;
+    var h = parseInt(p[0], 10);
+    var m = parseInt(p[1], 10);
+    if (isNaN(h) || isNaN(m)) return null;
+    return (h * 60 + m) % (24 * 60);
+  }
+
+  function formatHM(mins) {
+    if (mins == null || isNaN(mins)) return "";
+    var x = ((mins % (24 * 60)) + 24 * 60) % (24 * 60);
+    var h = Math.floor(x / 60);
+    var mi = x % 60;
+    return pad2(h) + ":" + pad2(mi);
+  }
+
+  /** Giữ khoảng lùi (phút trước STD) như file Excel — copy logic cũ */
+  function minutesBefore(stdStr, cutStr) {
+    var s = parseHM(stdStr);
+    var c = parseHM(cutStr);
+    if (s == null || c == null) return null;
+    var d = s - c;
+    if (d < 0) d += 24 * 60;
+    return d;
+  }
+
+  function applyBefore(stdNewStr, mb) {
+    var s = parseHM(stdNewStr);
+    if (s == null || mb == null) return null;
+    var g = s - mb;
+    while (g < 0) g += 24 * 60;
+    return formatHM(g);
+  }
+
+  function isNAVal(v) {
+    return String(v || "")
+      .trim()
+      .toLowerCase() === "n/a";
+  }
+
+  /** Chuẩn hoá nhập giờ: 600→06:00, 1825→18:25, na→N/A */
+  function smartFormatTimeCell(raw) {
+    var s = String(raw == null ? "" : raw).trim();
+    if (!s) return "";
+    var low = s.toLowerCase();
+    if (low === "na" || low === "n/a") return "N/A";
+    var digits = s.replace(/\D/g, "");
+    if (digits.length === 1 || digits.length === 2) {
+      var hh = parseInt(digits, 10);
+      if (!isNaN(hh) && hh >= 0 && hh <= 23) return pad2(hh) + ":00";
+    }
+    if (digits.length === 3) {
+      var h1 = parseInt(digits.charAt(0), 10);
+      var m1 = parseInt(digits.slice(1), 10);
+      if (!isNaN(h1) && !isNaN(m1)) return pad2(h1) + ":" + pad2(m1);
+    }
+    if (digits.length === 4) {
+      var h2 = parseInt(digits.slice(0, 2), 10);
+      var m2 = parseInt(digits.slice(2), 10);
+      if (!isNaN(h2) && !isNaN(m2)) return pad2(h2) + ":" + pad2(m2);
+    }
+    if (s.indexOf(":") >= 0) {
+      var pm = parseHM(s);
+      if (pm != null) return formatHM(pm);
+    }
+    return s;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function escapeAttr(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /* ===== ExcelImport — đọc .xlsx (SheetJS), map cột như mẫu SKD ===== */
+  function norm(s) {
+    return String(s == null ? "" : s)
+      .replace(/\r\n/g, "\n")
+      .trim()
+      .replace(/\s+/g, " ");
+  }
+
+  function cellStr(v) {
+    if (v == null || v === "") return "";
+    if (v instanceof Date && !isNaN(v.getTime())) {
+      var h = pad2(v.getHours());
+      var m = pad2(v.getMinutes());
+      if (h !== "00" || m !== "00") return h + ":" + m;
+    }
+    return String(v).trim();
+  }
+
+  function cellToHM(v) {
+    if (v == null || v === "") return null;
+    if (typeof v === "string") {
+      var low = v.trim().toLowerCase();
+      if (low === "n/a" || low === "na" || low === "-" || low === "—") return null;
+    }
+    if (v instanceof Date && !isNaN(v.getTime())) {
+      return pad2(v.getHours()) + ":" + pad2(v.getMinutes());
+    }
+    if (typeof v === "number") {
+      if (v > 0 && v < 1) {
+        var tm = Math.round(v * 24 * 60);
+        var h = Math.floor(tm / 60) % 24;
+        var m = tm % 60;
+        return pad2(h) + ":" + pad2(m);
+      }
+      if (typeof XLSX !== "undefined" && XLSX.SSF && XLSX.SSF.parse_date_code) {
+        var d = XLSX.SSF.parse_date_code(v);
+        if (d) return pad2(d.H) + ":" + pad2(d.M);
+      }
+    }
+    var s = String(v);
+    var m = s.match(/(\d{1,2})\s*:\s*(\d{2})/);
+    if (m) return pad2(parseInt(m[1], 10)) + ":" + pad2(parseInt(m[2], 10));
+    return null;
+  }
+
+  /** Giờ hoặc N/A hoặc chữ thô từ Excel */
+  function excelCutCell(v) {
+    if (v == null || v === "") return "";
+    if (typeof v === "string") {
+      var low = v.trim().toLowerCase();
+      if (low === "n/a" || low === "na") return "N/A";
+    }
+    var hm = cellToHM(v);
+    if (hm != null) return hm;
+    return cellStr(v);
+  }
+
+  function mapHeaderRow(row) {
+    var idx = { flt: 0, ac: 1, rtg: 2, std: 3, gen: 4, per: 5, doc: 6, transit: 7, bu: 8 };
+    if (!row || !row.length) return idx;
+    for (var c = 0; c < row.length; c++) {
+      var h = norm(row[c]).toLowerCase();
+      if (!h) continue;
+      if (h.indexOf("flt") !== -1 && (h.indexOf("nbr") !== -1 || h.indexOf("number") !== -1)) idx.flt = c;
+      else if (h === "a/c" || h.indexOf("a/c") === 0) idx.ac = c;
+      else if (h === "rtg" || h.indexOf("rtg") !== -1) idx.rtg = c;
+      else if (h === "std" || (h.length <= 6 && /^std/.test(h))) idx.std = c;
+      else if (h.indexOf("gen") !== -1 && (h.indexOf("cut") !== -1 || h.indexOf("time") !== -1)) idx.gen = c;
+      else if (h.indexOf("per") !== -1 && h.indexOf("cut") !== -1) idx.per = c;
+      else if (h.indexOf("doc") !== -1 && h.indexOf("cut") !== -1 && h.indexOf("transit") === -1 && h.indexOf("out") === -1) idx.doc = c;
+      else if (h.indexOf("transit") !== -1) idx.transit = c;
+      else if (h.indexOf("b/u") !== -1 || (h.indexOf("doc") !== -1 && h.indexOf("out") !== -1)) idx.bu = c;
+    }
+    return idx;
+  }
+
+  function mapDayColumns(dayRow) {
+    var d = { mon: -1, tue: -1, wed: -1, thu: -1, fri: -1, sat: -1, sun: -1, remark: -1 };
+    if (!dayRow) return d;
+    for (var c = 0; c < dayRow.length; c++) {
+      var t = norm(dayRow[c]).toLowerCase();
+      if (t === "mon") d.mon = c;
+      else if (t === "tue") d.tue = c;
+      else if (t === "wed") d.wed = c;
+      else if (t === "thu") d.thu = c;
+      else if (t === "fri") d.fri = c;
+      else if (t === "sat") d.sat = c;
+      else if (t === "sun") d.sun = c;
+      else if (t.indexOf("remark") !== -1) d.remark = c;
+    }
+    if (d.remark < 0) {
+      for (var c2 = dayRow.length - 1; c2 >= 0; c2--) {
+        if (norm(dayRow[c2]).toLowerCase().indexOf("remark") !== -1) {
+          d.remark = c2;
+          break;
+        }
+      }
+    }
+    return d;
+  }
+
+  function isDataRow(row, idx) {
+    var f = row && row[idx.flt];
+    if (f == null || f === "") return false;
+    var t = String(f).trim();
+    if (!t) return false;
+    if (/^total$/i.test(t)) return false;
+    return true;
+  }
+
+  function parseExcelWorkbook(buf) {
+    if (typeof XLSX === "undefined") {
+      throw new Error("Chưa tải được xlsx.full.min.js — đặt file này cạnh index.html.");
+    }
+    var wb = XLSX.read(buf, { type: "array", cellDates: true });
+    var name = wb.SheetNames[0];
+    var ws = wb.Sheets[name];
+    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+    var headerRow = -1;
+    for (var r = 0; r < Math.min(25, rows.length); r++) {
+      var row = rows[r] || [];
+      for (var c = 0; c < row.length; c++) {
+        var cell = norm(row[c]).toLowerCase();
+        if (cell.indexOf("flt") !== -1 && cell.indexOf("nbr") !== -1) {
+          headerRow = r;
+          break;
+        }
+      }
+      if (headerRow >= 0) break;
+    }
+    if (headerRow < 0) throw new Error("Không tìm thấy dòng tiêu đề (Flt Nbr).");
+    var col = mapHeaderRow(rows[headerRow]);
+    var dayHeaderRow = rows[headerRow + 1] || [];
+    var daysMap = mapDayColumns(dayHeaderRow);
+    var dataStart = headerRow + 2;
+    var out = [];
+    for (var i = dataStart; i < rows.length; i++) {
+      var row = rows[i];
+      if (!row) continue;
+      if (!isDataRow(row, col)) continue;
+      var flt = String(row[col.flt] == null ? "" : row[col.flt]).trim();
+      var ac = row[col.ac] != null ? String(row[col.ac]).trim() : "";
+      var rtg = row[col.rtg] != null ? String(row[col.rtg]).trim() : "";
+      var std = excelCutCell(row[col.std]);
+      var gen = excelCutCell(row[col.gen]);
+      var per = excelCutCell(row[col.per]);
+      var doc = excelCutCell(row[col.doc]);
+      var transit = excelCutCell(row[col.transit]);
+      var bu = excelCutCell(row[col.bu]);
+      if (!std) continue;
+
+      function dayAt(key) {
+        var ix = daysMap[key];
+        if (ix == null || ix < 0) return "";
+        return cellStr(row[ix]);
+      }
+      var remark = "";
+      if (daysMap.remark >= 0) remark = cellStr(row[daysMap.remark]);
+
+      var one = normalizeRow({
+        id: newRowId(),
+        flt: flt,
+        ac: ac,
+        rtg: rtg,
+        std: std,
+        gen: gen,
+        per: per,
+        doc: doc,
+        transit: transit,
+        bu: bu,
+        ops: {
+          mon: dayAt("mon"),
+          tue: dayAt("tue"),
+          wed: dayAt("wed"),
+          thu: dayAt("thu"),
+          fri: dayAt("fri"),
+          sat: dayAt("sat"),
+          sun: dayAt("sun")
+        },
+        remark: remark
+      });
+      snapshotOrigAndMb(one);
+      out.push(one);
+    }
+    if (!out.length) throw new Error("Không đọc được dòng chuyến bay hợp lệ (cần có STD).");
+    return out;
+  }
+
+  /* ===== Màu dòng in theo mã hãng (spec) ===== */
+  function rowColorForFlight(fltNbr) {
+    var code =
+      String(fltNbr || "")
+        .trim()
+        .toUpperCase()
+        .match(/^(\d[A-Z]|[A-Z]{2})/);
+    code = code ? code[1] : "";
+    if (code === "TG") return "#00b050";
+    if (["CV", "LH", "MF", "TR"].indexOf(code) >= 0) return "#c00000";
+    if (
+      [
+        "VJ", "SQ", "CX", "5X", "6E", "BI", "JL", "KE", "OZ", "TK", "HU", "NX",
+        "BR", "PR", "WB", "ET", "QR", "EK", "NH", "CI", "LD", "TH"
+      ].indexOf(code) >= 0
+    )
+      return "#0070c0";
+    return "#000000";
+  }
+
+  /* ===== PrintHelper — dựng bảng PDF (chỉ escapeHtml cho dữ liệu) ===== */
+  var PDF_TITLE = "SUM2025 FLT SKD & HDL";
+
+  function cellPrintHtml(v) {
+    var t = String(v == null ? "" : v).trim();
+    if (!t) return "";
+    if (isNAVal(t)) return '<span class="pdf-na">N/A</span>';
+    return escapeHtml(t);
+  }
+
+  function buildPrintDom(state) {
+    var root = document.getElementById("printRoot");
+    if (!root) return;
+    var ud = state.meta && state.meta.updatedDate ? String(state.meta.updatedDate) : "08APR26";
+    var banner =
+      '<div class="pdf-banner">' +
+      '<div class="pdf-banner__left">SCSC/OPS/EXP</div>' +
+      '<div class="pdf-banner__center">' +
+      '<div class="pdf-banner__title">' +
+      escapeHtml(PDF_TITLE) +
+      "</div>" +
+      '<div class="pdf-banner__updated">UPDATED ' +
+      escapeHtml(ud) +
+      "</div></div>" +
+      '<div class="pdf-banner__right">INTERNAL USE ONLY</div></div>';
+
+    var thead =
+      "<thead>" +
+      "<tr>" +
+      '<th rowspan="2">Flt Nbr</th>' +
+      '<th rowspan="2">A/C</th>' +
+      '<th rowspan="2">RTG</th>' +
+      '<th rowspan="2">STD</th>' +
+      '<th colspan="4">Cut-off</th>' +
+      '<th rowspan="2">B/U done<br/>DOC out</th>' +
+      '<th colspan="7">OPS DAYS</th>' +
+      '<th rowspan="2">REMARK</th>' +
+      "</tr>" +
+      "<tr>" +
+      "<th>time for<br/>GEN</th>" +
+      "<th>time for<br/>PER</th>" +
+      "<th>time for<br/>DOC</th>" +
+      "<th>time for<br/>transit</th>" +
+      "<th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>" +
+      '<th class="sun-col">Sun</th>' +
+      "</tr>" +
+      "</thead>";
+
+    var body = "<tbody>";
+    for (var i = 0; i < state.rows.length; i++) {
+      var r = state.rows[i];
+      var col = escapeAttr(rowColorForFlight(r.flt));
+      body += '<tr style="color:' + col + '">';
+      body += "<td>" + cellPrintHtml(r.flt) + "</td>";
+      body += "<td>" + cellPrintHtml(r.ac) + "</td>";
+      body += "<td>" + cellPrintHtml(r.rtg) + "</td>";
+      body += "<td>" + cellPrintHtml(r.std) + "</td>";
+      body += "<td>" + cellPrintHtml(r.gen) + "</td>";
+      body += "<td>" + cellPrintHtml(r.per) + "</td>";
+      body += "<td>" + cellPrintHtml(r.doc) + "</td>";
+      body += "<td>" + cellPrintHtml(r.transit) + "</td>";
+      body += "<td>" + cellPrintHtml(r.bu) + "</td>";
+      for (var d = 0; d < OPS_KEYS.length; d++) {
+        var dk = OPS_KEYS[d];
+        var sun = dk === "sun" ? ' class="sun-col"' : "";
+        body += "<td" + sun + ">";
+        body += cellPrintHtml(r.ops[dk]);
+        body += "</td>";
+      }
+      body += '<td class="remark-col">' + cellPrintHtml(r.remark) + "</td>";
+      body += "</tr>";
+    }
+    body += "</tbody>";
+
+    root.innerHTML =
+      banner + '<div class="pdf-table-wrap"><table class="pdf-table">' + thead + body + "</table></div>";
+  }
+
+  function base64ToArrayBuffer(b64) {
+    var bin = atob(b64);
+    var len = bin.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  async function getSkdhdlTemplateBuffer() {
+    if (typeof fetch !== "undefined") {
+      try {
+        var r = await fetch("EXP SKDHDL UPDATE 08APR26.xlsx", { cache: "no-store" });
+        if (r.ok) return await r.arrayBuffer();
+      } catch (e) {}
+    }
+    if (typeof SKDHDL_TEMPLATE_B64 !== "undefined" && SKDHDL_TEMPLATE_B64) {
+      return base64ToArrayBuffer(SKDHDL_TEMPLATE_B64);
+    }
+    throw new Error(
+      "Không đọc được file mẫu. Đặt EXP SKDHDL UPDATE 08APR26.xlsx cạnh HTML hoặc tải skdhdl-template-b64.js."
+    );
+  }
+
+  function hexToArgbForExcel(h) {
+    h = String(h || "").replace(/^#/, "");
+    if (h.length === 6) return "FF" + h.toUpperCase();
+    return h.length === 8 ? h.toUpperCase() : "FF000000";
+  }
+
+  function cloneFill(f) {
+    if (!f) return undefined;
+    try {
+      return JSON.parse(JSON.stringify(f));
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  /** Xuất .xlsx giữ định dạng + màu file mẫu (ExcelJS + template) */
+  async function exportToExcel(state) {
+    if (typeof ExcelJS === "undefined") {
+      alert("Thiếu exceljs.min.js — đặt file này cạnh index.html.");
+      return;
+    }
+    var ab;
+    try {
+      ab = await getSkdhdlTemplateBuffer();
+    } catch (e) {
+      alert(e.message || e);
+      return;
+    }
+    var wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(ab);
+    var ws = wb.getWorksheet("Sheet1");
+    if (!ws) {
+      alert("Không có Sheet1 trong file mẫu.");
+      return;
+    }
+
+    var ud = state.meta && state.meta.updatedDate ? String(state.meta.updatedDate) : "08APR26";
+    var bannerRight =
+      "UPDATED " + ud + "                                          INTERNAL USE ONLY";
+    ws.getRow(2).getCell(4).value = bannerRight;
+
+    var stylesR6 = [];
+    ws.getRow(6).eachCell({ includeEmpty: true }, function (cell, colNumber) {
+      stylesR6[colNumber] = {
+        font: cell.font ? JSON.parse(JSON.stringify(cell.font)) : undefined,
+        fill: cloneFill(cell.fill),
+        border: cell.border ? JSON.parse(JSON.stringify(cell.border)) : undefined,
+        alignment: cell.alignment ? JSON.parse(JSON.stringify(cell.alignment)) : undefined
+      };
+    });
+
+    var footCell = ws.getRow(68).getCell(1);
+    var footerStyle = {
+      font: footCell.font ? JSON.parse(JSON.stringify(footCell.font)) : undefined,
+      alignment: footCell.alignment ? JSON.parse(JSON.stringify(footCell.alignment)) : undefined
+    };
+
+    ws.spliceRows(6, 63);
+
+    var n = state.rows.length;
+    var dataRows = Math.max(n, 1);
+    var emptyRows = [];
+    for (var er = 0; er < dataRows; er++) emptyRows.push([]);
+    ws.spliceRows.apply(ws, [6, 0].concat(emptyRows));
+
+    var firstDataExcel = 6;
+    var lastDataExcel = 5 + dataRows;
+
+    function applyBaseStyle(cell, colNumber) {
+      var st = stylesR6[colNumber];
+      if (!st) return;
+      if (st.font) cell.font = JSON.parse(JSON.stringify(st.font));
+      if (st.fill) cell.fill = cloneFill(st.fill);
+      if (st.border) cell.border = JSON.parse(JSON.stringify(st.border));
+      if (st.alignment) cell.alignment = JSON.parse(JSON.stringify(st.alignment));
+    }
+
+    for (var i = 0; i < dataRows; i++) {
+      var row = n > 0 ? state.rows[i] : null;
+      if (!row) row = { ops: emptyOps() };
+      var excelRow = 6 + i;
+      var r = ws.getRow(excelRow);
+      var argb = hexToArgbForExcel(rowColorForFlight(row.flt));
+      var vals = [
+        row.flt,
+        row.ac,
+        row.rtg,
+        row.std,
+        row.gen,
+        row.per,
+        row.doc,
+        row.transit,
+        row.bu,
+        row.ops.mon,
+        row.ops.tue,
+        row.ops.wed,
+        row.ops.thu,
+        row.ops.fri,
+        row.ops.sat,
+        row.ops.sun,
+        row.remark,
+        ""
+      ];
+      for (var c = 1; c <= 18; c++) {
+        var cell = r.getCell(c);
+        applyBaseStyle(cell, c);
+        cell.value = vals[c - 1] != null ? vals[c - 1] : "";
+        var cf = cell.font ? JSON.parse(JSON.stringify(cell.font)) : { name: "Arial", size: 12, bold: true };
+        cf.color = { argb: argb };
+        cell.font = cf;
+      }
+    }
+
+    var footerRow = 6 + dataRows;
+    ws.spliceRows(footerRow, 0, []);
+    var fr = ws.getRow(footerRow);
+    ws.mergeCells(footerRow, 1, footerRow, 9);
+    fr.getCell(1).value = "TOTAL";
+    if (footerStyle.font) fr.getCell(1).font = JSON.parse(JSON.stringify(footerStyle.font));
+    if (footerStyle.alignment) fr.getCell(1).alignment = JSON.parse(JSON.stringify(footerStyle.alignment));
+
+    for (var fc = 10; fc <= 16; fc++) {
+      var L = String.fromCharCode(64 + fc);
+      var fcell = fr.getCell(fc);
+      applyBaseStyle(fcell, fc);
+      fcell.value = {
+        formula: "COUNTIF(" + L + firstDataExcel + ":" + L + lastDataExcel + ',"=x")',
+        result: 0
+      };
+    }
+
+    while (ws.rowCount > footerRow) {
+      ws.spliceRows(footerRow + 1, 1);
+    }
+
+    var buf = await wb.xlsx.writeBuffer();
+    var d = new Date();
+    var ds =
+      d.getFullYear() +
+      pad2(d.getMonth() + 1) +
+      pad2(d.getDate());
+    var blob = new Blob([buf], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "cutoff-scsc-" + ds + ".xlsx";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  /* ===== TableRenderer — bảng màn hình (DOM an toàn) ===== */
+  var state;
+  var tbody = document.getElementById("tbody");
+  var filterInput = document.getElementById("filterInput");
+  var updatedDateEl = document.getElementById("updatedDate");
+
+  function rowMatchesFilter(row, q) {
+    if (!q) return true;
+    q = q.toLowerCase();
+    var blob = [row.flt, row.ac, row.rtg].join(" ").toLowerCase();
+    return blob.indexOf(q) !== -1;
+  }
+
+  function syncMetaInput() {
+    if (updatedDateEl) updatedDateEl.value = state.meta.updatedDate || "";
+  }
+
+  function createTextInput(className, value, data) {
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.className = className;
+    inp.value = value != null ? String(value) : "";
+    if (data) {
+      for (var k in data) {
+        if (Object.prototype.hasOwnProperty.call(data, k)) inp.setAttribute(k, data[k]);
+      }
+    }
+    return inp;
+  }
+
+  function opsUseTextMode(val) {
+    var v = String(val || "").trim();
+    if (!v) return false;
+    if (v === "X" || v === "x") return false;
+    return true;
+  }
+
+  function renderOpsCell(td, row, day) {
+    td.innerHTML = "";
+    var v = row.ops[day] != null ? String(row.ops[day]) : "";
+    var textMode = opsUseTextMode(v);
+
+    if (textMode) {
+      var inp = createTextInput("ops-text", v, { "data-field": "ops", "data-day": day });
+      inp.addEventListener("change", function () {
+        row.ops[day] = inp.value;
+        scheduleSave(state);
+      });
+      inp.addEventListener("blur", function () {
+        if (!String(inp.value || "").trim()) {
+          row.ops[day] = "";
+        } else {
+          row.ops[day] = inp.value;
+        }
+        scheduleSave(state);
+        renderOpsCell(td, row, day);
+      });
+      td.appendChild(inp);
+      return;
+    }
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ops-check" + (v === "X" || v === "x" ? " has-x" : "");
+    btn.textContent = v === "X" || v === "x" ? "X" : "☐";
+    btn.setAttribute("data-field", "ops");
+    btn.setAttribute("data-day", day);
+
+    function goTextMode() {
+      row.ops[day] = "";
+      renderOpsCell(td, row, day);
+      var next = td.querySelector("input.ops-text");
+      if (next) {
+        next.focus();
+        next.select();
+      }
+      scheduleSave(state);
+    }
+
+    btn.addEventListener("click", function (ev) {
+      if (ev.shiftKey) {
+        goTextMode();
+        return;
+      }
+      var cur = row.ops[day] || "";
+      row.ops[day] = cur === "X" || cur === "x" ? "" : "X";
+      scheduleSave(state);
+      renderOpsCell(td, row, day);
+    });
+    btn.addEventListener("dblclick", function (e) {
+      e.preventDefault();
+      goTextMode();
+    });
+
+    td.appendChild(btn);
+  }
+
+  function renderRow(tr, row, index) {
+    tr.innerHTML = "";
+    tr.dataset.rowId = row.id;
+    tr.draggable = true;
+
+    migrateRow(row);
+
+    var q = (filterInput && filterInput.value) || "";
+    tr.classList.toggle("row-hidden", !rowMatchesFilter(row, q.trim().toLowerCase()));
+
+    var tdDrag = document.createElement("td");
+    tdDrag.className = "col-drag";
+    tdDrag.textContent = "⠿";
+    tdDrag.title = "Kéo để sắp xếp";
+    tr.appendChild(tdDrag);
+
+    var tdIdx = document.createElement("td");
+    tdIdx.className = "col-idx";
+    tdIdx.textContent = String(index + 1);
+    tr.appendChild(tdIdx);
+
+    var fields = ["flt", "ac", "rtg", "std", "gen", "per", "doc", "transit", "bu"];
+    for (var f = 0; f < fields.length; f++) {
+      (function (fn) {
+        var inp = createTextInput("cell-in", row[fn], { "data-field": fn });
+        if (fn === "std") {
+          inp.addEventListener("blur", function () {
+            row.std = smartFormatTimeCell(inp.value);
+            inp.value = row.std;
+            var hadB = rowHasBaseline(row);
+            if (!hadB && row.std) {
+              snapshotOrigAndMb(row);
+            } else if (hadB && row.std) {
+              recalcCutoffsFromMb(row);
+            }
+            scheduleSave(state);
+            renderAll();
+          });
+        } else if (TIME_FIELDS.indexOf(fn) >= 0) {
+          inp.addEventListener("blur", function () {
+            var field = inp.getAttribute("data-field");
+            row[field] = smartFormatTimeCell(inp.value);
+            inp.value = row[field];
+            if (row.std && row[field] && !isNAVal(row[field])) {
+              if (!row.mb) row.mb = { gen: null, per: null, doc: null, transit: null, bu: null };
+              row.mb[field] = minutesBefore(row.std, row[field]);
+            } else if (row.mb) {
+              row.mb[field] = null;
+            }
+            scheduleSave(state);
+            updateChangedHighlight(tr, row);
+          });
+        } else {
+          inp.addEventListener("input", function () {
+            row[fn] = inp.value;
+            scheduleSave(state);
+          });
+        }
+        var td = document.createElement("td");
+        td.appendChild(inp);
+        tr.appendChild(td);
+      })(fields[f]);
+    }
+
+    for (var o = 0; o < OPS_KEYS.length; o++) {
+      var day = OPS_KEYS[o];
+      var tdOp = document.createElement("td");
+      tdOp.className = "col-ops";
+      renderOpsCell(tdOp, row, day);
+      tr.appendChild(tdOp);
+    }
+
+    var tdRm = document.createElement("td");
+    var inpRemark = createTextInput("cell-in", row.remark, {
+      "data-field": "remark",
+      style: "max-width:10rem"
+    });
+    inpRemark.addEventListener("input", function () {
+      row.remark = inpRemark.value;
+      scheduleSave(state);
+    });
+    tdRm.appendChild(inpRemark);
+    tr.appendChild(tdRm);
+
+    var tdDel = document.createElement("td");
+    tdDel.className = "col-del";
+    var btnDel = document.createElement("button");
+    btnDel.type = "button";
+    btnDel.className = "btn-row-del";
+    btnDel.textContent = "🗑";
+    btnDel.title = "Xoá dòng";
+    btnDel.addEventListener("click", function () {
+      if (!confirm("Xoá dòng này?")) return;
+      var idx = state.rows.indexOf(row);
+      if (idx >= 0) {
+        state.rows.splice(idx, 1);
+        persistNow(state);
+        renderAll();
+      }
+    });
+    tdDel.appendChild(btnDel);
+    tr.appendChild(tdDel);
+
+    updateChangedHighlight(tr, row);
+
+    /* Drag & drop */
+    tr.addEventListener("dragstart", function (e) {
+      e.dataTransfer.setData("text/plain", row.id);
+      e.dataTransfer.effectAllowed = "move";
+      tr.classList.add("dragging");
+    });
+    tr.addEventListener("dragend", function () {
+      tr.classList.remove("dragging");
+    });
+    tr.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+    });
+    tr.addEventListener("drop", function (e) {
+      e.preventDefault();
+      var fromId = e.dataTransfer.getData("text/plain");
+      if (!fromId || fromId === row.id) return;
+      var iFrom = -1,
+        iTo = -1;
+      for (var i = 0; i < state.rows.length; i++) {
+        if (state.rows[i].id === fromId) iFrom = i;
+        if (state.rows[i].id === row.id) iTo = i;
+      }
+      if (iFrom < 0 || iTo < 0) return;
+      var moved = state.rows.splice(iFrom, 1)[0];
+      if (iFrom < iTo) iTo--;
+      state.rows.splice(iTo, 0, moved);
+      persistNow(state);
+      renderAll();
+    });
+  }
+
+  function renderAll() {
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    for (var i = 0; i < state.rows.length; i++) {
+      var tr = document.createElement("tr");
+      renderRow(tr, state.rows[i], i);
+      tbody.appendChild(tr);
+    }
+    syncMetaInput();
+  }
+
+  /* ===== Keyboard — Tab / Enter / mũi tên ===== */
+  function getCellInputs() {
+    return Array.prototype.slice.call(document.querySelectorAll("#screenTable tbody input.cell-in, #screenTable tbody input.ops-text"));
+  }
+
+  function getOpsButtons() {
+    return Array.prototype.slice.call(document.querySelectorAll("#screenTable tbody button.ops-check"));
+  }
+
+  function navigateFrom(el, dir) {
+    var all = getCellInputs().concat(getOpsButtons());
+    var idx = all.indexOf(el);
+    if (idx < 0) return;
+    var next = idx + dir;
+    if (next >= 0 && next < all.length) {
+      all[next].focus();
+      if (all[next].select) all[next].select();
+    }
+  }
+
+  function handleTableKeydown(ev) {
+    var t = ev.target;
+    if (!t || !t.closest || !t.closest("#screenTable")) return;
+    if (t.tagName === "BUTTON" && t.classList.contains("ops-check")) {
+      if (ev.key === "ArrowRight" || ev.key === "ArrowLeft" || ev.key === "ArrowUp" || ev.key === "ArrowDown") {
+        ev.preventDefault();
+        var buttons = getOpsButtons();
+        var ix = buttons.indexOf(t);
+        var cols = 7;
+        if (ev.key === "ArrowRight") navigateFrom(t, 1);
+        else if (ev.key === "ArrowLeft") navigateFrom(t, -1);
+        else if (ev.key === "ArrowDown" && ix + cols < buttons.length) navigateFrom(t, cols);
+        else if (ev.key === "ArrowUp" && ix - cols >= 0) navigateFrom(t, -cols);
+      }
+      return;
+    }
+    if (t.tagName !== "INPUT") return;
+    var inputs = getCellInputs();
+    var i = inputs.indexOf(t);
+    if (i < 0) return;
+    var nPerRow = 9 + 7 + 1;
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      var below = i + nPerRow;
+      if (below < inputs.length) inputs[below].focus();
+    } else if (ev.key === "ArrowDown") {
+      ev.preventDefault();
+      if (i + nPerRow < inputs.length) inputs[i + nPerRow].focus();
+    } else if (ev.key === "ArrowUp") {
+      ev.preventDefault();
+      if (i - nPerRow >= 0) inputs[i - nPerRow].focus();
+    }
+  }
+
+  /* ===== Events ===== */
+  function bindEvents() {
+    document.getElementById("btnAddRow").addEventListener("click", function () {
+      state.rows.push(
+        normalizeRow({
+          id: newRowId(),
+          flt: "",
+          ac: "",
+          rtg: "",
+          std: "",
+          gen: "",
+          per: "",
+          doc: "",
+          transit: "",
+          bu: "",
+          ops: emptyOps(),
+          remark: ""
+        })
+      );
+      scheduleSave(state);
+      renderAll();
+      var first = tbody.querySelector("tr:last-child input.cell-in");
+      if (first) {
+        first.focus();
+        tbody.querySelector("tr:last-child").scrollIntoView({ block: "nearest" });
+      }
+    });
+
+    document.getElementById("btnPrint").addEventListener("click", function () {
+      buildPrintDom(state);
+      window.print();
+    });
+
+    document.getElementById("btnExportExcel").addEventListener("click", function () {
+      exportToExcel(state).catch(function (err) {
+        alert("Xuất Excel: " + (err && err.message ? err.message : err));
+      });
+    });
+
+    window.addEventListener("beforeprint", function () {
+      buildPrintDom(state);
+    });
+
+    document.getElementById("btnExport").addEventListener("click", function () {
+      var payload = { meta: state.meta, rows: state.rows };
+      var json = JSON.stringify(payload, null, 2);
+      var blob = new Blob([json], { type: "application/json;charset=utf-8" });
+      var a = document.createElement("a");
+      var d = new Date();
+      var ds =
+        d.getFullYear() +
+        pad2(d.getMonth() + 1) +
+        pad2(d.getDate());
+      a.href = URL.createObjectURL(blob);
+      a.download = "cutoff-scsc-" + ds + ".json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById("btnImport").addEventListener("click", function () {
+      document.getElementById("importFile").click();
+    });
+
+    document.getElementById("btnImportExcel").addEventListener("click", function () {
+      document.getElementById("importExcelFile").click();
+    });
+
+    document.getElementById("importExcelFile").addEventListener("change", function (e) {
+      var file = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          if (
+            !confirm(
+              "Thay thế TOÀN BỘ dữ liệu trên bảng bằng file Excel?\n\n" + "File: " + file.name
+            )
+          )
+            return;
+          var newRows = parseExcelWorkbook(reader.result);
+          state.rows = newRows;
+          persistNow(state);
+          renderAll();
+          syncMetaInput();
+          alert("Đã import " + newRows.length + " chuyến từ Excel.");
+        } catch (err) {
+          alert("Import Excel lỗi: " + (err.message || err));
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById("importFile").addEventListener("change", function (e) {
+      var file = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!file) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var data = JSON.parse(String(r.result || ""));
+          if (!confirm("Thay thế toàn bộ dữ liệu bằng file JSON này?")) return;
+          var newRows = [];
+          if (Array.isArray(data)) {
+            for (var i = 0; i < data.length; i++) {
+              var n = normalizeRow(data[i]);
+              if (n) newRows.push(n);
+            }
+          } else if (data.rows && Array.isArray(data.rows)) {
+            for (var j = 0; j < data.rows.length; j++) {
+              var n2 = normalizeRow(data.rows[j]);
+              if (n2) newRows.push(n2);
+            }
+            if (data.meta && typeof data.meta.updatedDate === "string") {
+              state.meta.updatedDate = data.meta.updatedDate;
+            }
+          }
+          if (!newRows.length) throw new Error("Không có dòng hợp lệ.");
+          state.rows = newRows;
+          persistNow(state);
+          renderAll();
+          syncMetaInput();
+        } catch (err) {
+          alert("Import lỗi: " + (err.message || err));
+        }
+      };
+      r.readAsText(file);
+    });
+
+    document.getElementById("btnClearDraft").addEventListener("click", function () {
+      if (!confirm("Xoá toàn bộ nháp trên trình duyệt?")) return;
+      if (!confirm("Xác nhận lần 2: mọi dòng và ngày UPDATED sẽ bị xoá.")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(META_KEY);
+      state = loadState();
+      renderAll();
+    });
+
+    if (filterInput) {
+      filterInput.addEventListener("input", function () {
+        renderAll();
+      });
+    }
+
+    if (updatedDateEl) {
+      updatedDateEl.addEventListener("input", function () {
+        state.meta.updatedDate = updatedDateEl.value.trim() || "08APR26";
+        scheduleSave(state);
+      });
+    }
+
+    document.addEventListener("keydown", handleTableKeydown);
+  }
+
+  /* ===== Khởi tạo ===== */
+  var __hadRows = !!localStorage.getItem(STORAGE_KEY);
+  state = loadState();
+  if (!__hadRows) persistNow(state);
+
+  syncMetaInput();
+  renderAll();
+  bindEvents();
+})();
+  </script>
+</body>
+</html>
