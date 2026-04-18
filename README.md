@@ -17,7 +17,7 @@ python -m http.server 8080
 
 - Toàn bộ dữ liệu (bảng chuyến, nháp STD, danh sách hãng bay) lưu trong **localStorage của trình duyệt**
 - Mỗi máy có dữ liệu riêng — không đồng bộ giữa máy này & máy khác
-- Dùng nút **Export JSON / Import JSON** trong app để backup & chia sẻ
+- Dùng **Export Excel** trong app để xuất bản in / chia sẻ
 
 ## Deploy
 

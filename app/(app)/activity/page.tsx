@@ -2,13 +2,12 @@
 
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card } from "@/components/ui/Card";
-import { motion } from "framer-motion";
 import { Bell, FileSpreadsheet, FileUp } from "lucide-react";
 
 const items = [
   {
     title: "Import / Export",
-    desc: "Trên desktop: thanh công cụ ngay dưới header. Trên điện thoại: menu ⋮ trên Home.",
+    desc: "Trên desktop: thanh công cụ dưới header (Excel, in PDF) và sidebar trái. Trên điện thoại: menu ⋮ trên Home.",
     icon: FileUp,
   },
   {
@@ -25,31 +24,26 @@ const items = [
 
 export default function ActivityPage() {
   return (
-    <div className="pb-28 lg:pb-8">
+    <div className="flex flex-1 flex-col pb-28 lg:pb-8">
       <AppHeader title="Activity" subtitle="Mẹo & luồng làm việc" />
-      <main className="mx-auto max-w-2xl space-y-4 px-4 pt-4 lg:max-w-[min(100%,1600px)] lg:px-8">
-        {items.map((it, i) => (
-          <motion.div
-            key={it.title}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06, duration: 0.25 }}
-          >
-            <Card className="flex gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 dark:bg-brand-950/80 dark:text-brand-300">
-                <it.icon className="h-6 w-6" />
+      <main className="mx-auto w-full max-w-md space-y-3 px-4 pt-4 lg:max-w-6xl lg:space-y-0 lg:px-6 lg:pt-4">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+          {items.map((it) => (
+            <Card key={it.title} className="flex gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <it.icon className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-[17px] font-semibold text-slate-900 dark:text-white">
+                <h2 className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">
                   {it.title}
                 </h2>
-                <p className="mt-1 text-[15px] leading-relaxed text-slate-600 dark:text-slate-400">
+                <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
                   {it.desc}
                 </p>
               </div>
             </Card>
-          </motion.div>
-        ))}
+          ))}
+        </div>
       </main>
     </div>
   );

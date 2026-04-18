@@ -1,4 +1,4 @@
-import type { ScheduleRow } from "./types";
+import type { OpsKey, ScheduleRow } from "./types";
 
 export const STORAGE_KEY = "cutoff-scsc-rows-v2";
 export const META_KEY = "cutoff-scsc-meta-v2";
@@ -13,6 +13,28 @@ export const OPS_KEYS = [
   "sat",
   "sun",
 ] as const;
+
+/** Nhãn ngắn theo lịch VN (desktop — cột OPS) */
+export const OPS_DAY_LABELS: Record<OpsKey, string> = {
+  mon: "T2",
+  tue: "T3",
+  wed: "T4",
+  thu: "T5",
+  fri: "T6",
+  sat: "T7",
+  sun: "CN",
+};
+
+/** Nhãn cột OPS kiểu bảng cut-off (MON…SUN) — gọn ngang */
+export const OPS_DAY_HEADER_EN: Record<OpsKey, string> = {
+  mon: "MON",
+  tue: "TUE",
+  wed: "WED",
+  thu: "THU",
+  fri: "FRI",
+  sat: "SAT",
+  sun: "SUN",
+};
 
 export const TIME_FIELDS = ["std", "gen", "per", "doc", "transit", "bu"] as const;
 

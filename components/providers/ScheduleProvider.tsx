@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { SAVE_MS } from "@/lib/schedule/constants";
+import { META_KEY, SAVE_MS, STORAGE_KEY } from "@/lib/schedule/constants";
 import { parseExcelWorkbook } from "@/lib/schedule/excelImport";
 import {
   emptyOps,
@@ -24,6 +24,29 @@ import {
 import { clearStorage, loadState, persistNow } from "@/lib/schedule/storage";
 import type { ScheduleMeta, ScheduleRow, ScheduleState } from "@/lib/schedule/types";
 import { isNAVal, minutesBefore, smartFormatTimeCell } from "@/lib/schedule/time";
+import { getSyncDocId, isSupabaseConfigured } from "@/lib/sync/env";
+import { statesEqual } from "@/lib/sync/hydrate";
+import {
+  NEVER_SYNCED_AT,
+  clearLastRemoteIso,
+  getLastRemoteIso,
+  setLastRemoteIso,
+} from "@/lib/sync/lastRemoteAt";
+import { shouldSkipEmptyRemoteOverwrite } from "@/lib/sync/remoteGuards";
+import {
+  fetchRemoteState,
+  subscribeRemoteState,
+  upsertRemoteState,
+} from "@/lib/sync/remoteSupabase";
+import { createTabSync } from "@/lib/sync/tabBroadcast";
+
+type SyncInfo = {
+  /** Có cấu hình Supabase (đồng bộ đa thiết bị) */
+  cloudEnabled: boolean;
+  /** ISO lần áp dữ liệu từ server gần nhất (hiển thị) */
+  lastRemoteAt: string | null;
+  error: string | null;
+};
 
 type Ctx = {
   state: ScheduleState;
@@ -39,10 +62,9 @@ type Ctx = {
   addRow: () => void;
   removeRow: (id: string) => void;
   reorder: (fromId: string, toId: string) => void;
-  importJsonFile: (file: File) => Promise<void>;
   importExcelFile: (file: File) => Promise<void>;
-  exportJson: () => void;
   clearDraft: () => void;
+  sync: SyncInfo;
 };
 
 const ScheduleContext = createContext<Ctx | null>(null);
@@ -56,19 +78,152 @@ export function useSchedule(): Ctx {
 export function ScheduleProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ScheduleState>(() => loadState());
   const [filter, setFilter] = useState("");
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(null);
 
-  const scheduleSave = useCallback((next: ScheduleState) => {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      saveTimer.current = null;
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tabSyncRef = useRef<ReturnType<typeof createTabSync> | null>(null);
+  const tabIdRef = useRef<string>("");
+  if (!tabIdRef.current) {
+    tabIdRef.current =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2);
+  }
+
+  const pushRemote = useCallback(async (next: ScheduleState) => {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const ts = await upsertRemoteState(getSyncDocId(), next);
+      if (ts) {
+        setLastRemoteIso(ts);
+        setLastRemoteAt(ts);
+      }
+      setSyncError(null);
+    } catch (e) {
+      setSyncError(String(e));
+    }
+  }, []);
+
+  const persistImmediate = useCallback(
+    (next: ScheduleState) => {
       persistNow(next);
-    }, SAVE_MS);
+      tabSyncRef.current?.broadcast(next);
+      void pushRemote(next);
+    },
+    [pushRemote]
+  );
+
+  const scheduleSave = useCallback(
+    (next: ScheduleState) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        saveTimer.current = null;
+        persistNow(next);
+        tabSyncRef.current?.broadcast(next);
+        void pushRemote(next);
+      }, SAVE_MS);
+    },
+    [pushRemote]
+  );
+
+  useEffect(() => {
+    const t = getLastRemoteIso();
+    setLastRemoteAt(t === NEVER_SYNCED_AT ? null : t);
   }, []);
 
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
+
+  /** Đồng bộ tab (BroadcastChannel) */
+  useEffect(() => {
+    const tab = createTabSync(tabIdRef.current, (next) => {
+      setState((prev) => {
+        if (statesEqual(prev, next)) return prev;
+        if (saveTimer.current) {
+          clearTimeout(saveTimer.current);
+          saveTimer.current = null;
+        }
+        persistNow(next);
+        return next;
+      });
+    });
+    tabSyncRef.current = tab;
+    return () => {
+      tab.close();
+      tabSyncRef.current = null;
+    };
+  }, []);
+
+  /** Tab khác ghi localStorage — tải lại (tránh ghi đè khi đang debounce chỉnh sửa) */
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY && e.key !== META_KEY) return;
+      if (saveTimer.current) return;
+      setState(loadState());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  /** Supabase: fetch ban đầu + realtime */
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    const docId = getSyncDocId();
+    let cancelled = false;
+    let unsubscribe = () => {};
+
+    void (async () => {
+      const initialRows = loadState().rows.length;
+      const r = await fetchRemoteState(docId);
+      if (cancelled) return;
+      if (!r) {
+        unsubscribe = subscribeRemoteState(docId, (next, updatedAt) => {
+          applyRemoteFromServer(next, updatedAt);
+        });
+        return;
+      }
+      if (
+        new Date(r.updatedAt) > new Date(getLastRemoteIso()) &&
+        !shouldSkipEmptyRemoteOverwrite(r.state, initialRows)
+      ) {
+        setState(r.state);
+        persistNow(r.state);
+        setLastRemoteIso(r.updatedAt);
+        setLastRemoteAt(r.updatedAt);
+      }
+      if (cancelled) return;
+      unsubscribe = subscribeRemoteState(docId, (next, updatedAt) => {
+        applyRemoteFromServer(next, updatedAt);
+      });
+    })();
+
+    function applyRemoteFromServer(next: ScheduleState, updatedAt: string) {
+      setState((prev) => {
+        if (statesEqual(prev, next)) return prev;
+        if (new Date(updatedAt) <= new Date(getLastRemoteIso())) return prev;
+        if (
+          shouldSkipEmptyRemoteOverwrite(next, prev.rows.length)
+        ) {
+          return prev;
+        }
+        if (saveTimer.current) {
+          clearTimeout(saveTimer.current);
+          saveTimer.current = null;
+        }
+        setLastRemoteIso(updatedAt);
+        setLastRemoteAt(updatedAt);
+        persistNow(next);
+        return next;
+      });
+    }
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
     };
   }, []);
 
@@ -180,11 +335,11 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     (id: string) => {
       setState((s) => {
         const st = { ...s, rows: s.rows.filter((r) => r.id !== id) };
-        persistNow(st);
+        persistImmediate(st);
         return st;
       });
     },
-    []
+    [persistImmediate]
   );
 
   const reorder = useCallback(
@@ -200,80 +355,42 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         if (iFrom < iTo) j--;
         next.splice(j, 0, moved);
         const st = { ...s, rows: next };
-        persistNow(st);
+        persistImmediate(st);
         return st;
       });
     },
-    []
+    [persistImmediate]
   );
 
-  const importJsonFile = useCallback(async (file: File) => {
-    const text = await file.text();
-    const data = JSON.parse(text) as unknown;
-    let newRows: ScheduleRow[] = [];
-    let metaPatch: Partial<ScheduleMeta> | undefined;
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        const n = normalizeRow(item);
-        if (n) newRows.push(n);
-      }
-    } else if (
-      data &&
-      typeof data === "object" &&
-      Array.isArray((data as { rows?: unknown }).rows)
-    ) {
-      const d = data as { rows: unknown[]; meta?: { updatedDate?: string } };
-      for (const item of d.rows) {
-        const n = normalizeRow(item);
-        if (n) newRows.push(n);
-      }
-      if (d.meta && typeof d.meta.updatedDate === "string") {
-        metaPatch = { updatedDate: d.meta.updatedDate };
-      }
-    }
-    if (!newRows.length) throw new Error("Không có dòng hợp lệ.");
-    for (const r of newRows) migrateRow(r);
-    setState((s) => {
-      const st = {
-        rows: newRows,
-        meta: metaPatch ? { ...s.meta, ...metaPatch } : s.meta,
-      };
-      persistNow(st);
-      return st;
-    });
-  }, []);
-
-  const importExcelFile = useCallback(async (file: File) => {
-    const buf = await file.arrayBuffer();
-    const newRows = parseExcelWorkbook(buf);
-    setState((s) => {
-      const st = { ...s, rows: newRows };
-      persistNow(st);
-      return st;
-    });
-  }, []);
-
-  const exportJson = useCallback(() => {
-    const payload = { meta: state.meta, rows: state.rows };
-    const json = JSON.stringify(payload, null, 2);
-    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
-    const a = document.createElement("a");
-    const d = new Date();
-    const ds =
-      d.getFullYear() +
-      String(d.getMonth() + 1).padStart(2, "0") +
-      String(d.getDate()).padStart(2, "0");
-    a.href = URL.createObjectURL(blob);
-    a.download = "cutoff-scsc-" + ds + ".json";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }, [state.meta, state.rows]);
+  const importExcelFile = useCallback(
+    async (file: File) => {
+      const buf = await file.arrayBuffer();
+      const newRows = parseExcelWorkbook(buf);
+      setState((s) => {
+        const st = { ...s, rows: newRows };
+        persistImmediate(st);
+        return st;
+      });
+    },
+    [persistImmediate]
+  );
 
   const clearDraft = useCallback(() => {
     clearStorage();
+    clearLastRemoteIso();
+    setLastRemoteAt(null);
     const next = loadState();
     setState(next);
   }, []);
+
+  const syncInfo = useMemo<SyncInfo>(
+    () => ({
+      cloudEnabled: isSupabaseConfigured(),
+      lastRemoteAt,
+      error: syncError,
+    }),
+    [lastRemoteAt, syncError]
+  );
 
   const value = useMemo<Ctx>(
     () => ({
@@ -286,10 +403,9 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       addRow,
       removeRow,
       reorder,
-      importJsonFile,
       importExcelFile,
-      exportJson,
       clearDraft,
+      sync: syncInfo,
     }),
     [
       state,
@@ -300,10 +416,9 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       addRow,
       removeRow,
       reorder,
-      importJsonFile,
       importExcelFile,
-      exportJson,
       clearDraft,
+      syncInfo,
     ]
   );
 

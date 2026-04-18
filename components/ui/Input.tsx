@@ -11,7 +11,7 @@ export const Input = forwardRef<
     <input
       ref={ref}
       className={cn(
-        "min-h-[44px] w-full rounded-2xl border border-slate-200 bg-white px-4 text-[16px] text-slate-900 shadow-sm transition-[box-shadow,border-color] placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500",
+        "min-h-[44px] w-full rounded-md border border-slate-300 bg-white px-3 text-[16px] text-slate-900 transition-[box-shadow,border-color] placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-400/40 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-500 dark:focus:ring-slate-500/30",
         className
       )}
       {...props}
