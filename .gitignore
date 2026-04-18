@@ -19,6 +19,8 @@ dist/
 build/
 .cache/
 tmp/
+.next/
+out/
 
 # Backup
 *.bak
