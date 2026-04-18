@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bảng Cut-off SCSC</title>
+  <title>FLIGHT SCHEDULE &amp; HANDLING (EXPORT)</title>
   <script src="xlsx.full.min.js"></script>
   <script src="exceljs.min.js"></script>
-  <script src="skdhdl-template-b64.js"></script>
+  <script src="exportFlightSchedule.bundle.js"></script>
   <style>
     /* ========== SCREEN (dark theme) ========== */
     @media screen {
@@ -304,10 +304,10 @@
 
   <div class="no-print">
     <header class="top">
-      <h1>Bảng Cut-off SCSC</h1>
+      <h1>FLIGHT SCHEDULE &amp; HANDLING (EXPORT)</h1>
       <div class="top-tools">
         <button type="button" class="btn" id="btnPrint">🖨 In PDF</button>
-        <button type="button" class="btn" id="btnExportExcel" title="Xuất theo file mẫu EXP SKDHDL (màu, viền, merge) — cần exceljs.min.js + skdhdl-template-b64.js">⬇ In Excel</button>
+        <button type="button" class="btn" id="btnExportExcel" title="Xuất .xlsx in A4 ngang (ExcelJS) — EXP_SKDHDL_UPDATE_*.xlsx">📥 Export Excel</button>
         <button type="button" class="btn" id="btnExport">⬇ Export JSON</button>
         <button type="button" class="btn" id="btnImport">⬆ Import JSON</button>
         <button type="button" class="btn" id="btnImportExcel" title="Mẫu: sheet đầu, dòng có Flt Nbr + STD + cut-off + Mon…Sun">⬆ Import Excel</button>
@@ -1011,178 +1011,38 @@
       banner + '<div class="pdf-table-wrap"><table class="pdf-table">' + thead + body + "</table></div>";
   }
 
-  function base64ToArrayBuffer(b64) {
-    var bin = atob(b64);
-    var len = bin.length;
-    var bytes = new Uint8Array(len);
-    for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
-    return bytes.buffer;
+  /** Chuẩn hoá UPDATED cho dòng phụ đề Excel (vd. 08APR26 → 08-APR-2026) */
+  function formatUpdatedDateForExport(raw) {
+    var t = String(raw || "").trim();
+    if (!t) return "\u2014";
+    var m = t.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/i);
+    if (m) return m[1].padStart(2, "0") + "-" + m[2].toUpperCase() + "-" + m[3];
+    var m2 = t.match(/^(\d{2})([A-Za-z]{3})(\d{2})$/i);
+    if (m2) {
+      var y = 2000 + parseInt(m2[3], 10);
+      return m2[1] + "-" + m2[2].toUpperCase() + "-" + String(y);
+    }
+    return t;
   }
 
-  async function getSkdhdlTemplateBuffer() {
-    if (typeof fetch !== "undefined") {
-      try {
-        var r = await fetch("EXP SKDHDL UPDATE 08APR26.xlsx", { cache: "no-store" });
-        if (r.ok) return await r.arrayBuffer();
-      } catch (e) {}
-    }
-    if (typeof SKDHDL_TEMPLATE_B64 !== "undefined" && SKDHDL_TEMPLATE_B64) {
-      return base64ToArrayBuffer(SKDHDL_TEMPLATE_B64);
-    }
-    throw new Error(
-      "Không đọc được file mẫu. Đặt EXP SKDHDL UPDATE 08APR26.xlsx cạnh HTML hoặc tải skdhdl-template-b64.js."
-    );
-  }
-
-  function hexToArgbForExcel(h) {
-    h = String(h || "").replace(/^#/, "");
-    if (h.length === 6) return "FF" + h.toUpperCase();
-    return h.length === 8 ? h.toUpperCase() : "FF000000";
-  }
-
-  function cloneFill(f) {
-    if (!f) return undefined;
-    try {
-      return JSON.parse(JSON.stringify(f));
-    } catch (e) {
-      return undefined;
-    }
-  }
-
-  /** Xuất .xlsx giữ định dạng + màu file mẫu (ExcelJS + template) */
-  async function exportToExcel(state) {
-    if (typeof ExcelJS === "undefined") {
-      alert("Thiếu exceljs.min.js — đặt file này cạnh index.html.");
-      return;
-    }
-    var ab;
-    try {
-      ab = await getSkdhdlTemplateBuffer();
-    } catch (e) {
-      alert(e.message || e);
-      return;
-    }
-    var wb = new ExcelJS.Workbook();
-    await wb.xlsx.load(ab);
-    var ws = wb.getWorksheet("Sheet1");
-    if (!ws) {
-      alert("Không có Sheet1 trong file mẫu.");
-      return;
-    }
-
-    var ud = state.meta && state.meta.updatedDate ? String(state.meta.updatedDate) : "08APR26";
-    var bannerRight =
-      "UPDATED " + ud + "                                          INTERNAL USE ONLY";
-    ws.getRow(2).getCell(4).value = bannerRight;
-
-    var stylesR6 = [];
-    ws.getRow(6).eachCell({ includeEmpty: true }, function (cell, colNumber) {
-      stylesR6[colNumber] = {
-        font: cell.font ? JSON.parse(JSON.stringify(cell.font)) : undefined,
-        fill: cloneFill(cell.fill),
-        border: cell.border ? JSON.parse(JSON.stringify(cell.border)) : undefined,
-        alignment: cell.alignment ? JSON.parse(JSON.stringify(cell.alignment)) : undefined
-      };
-    });
-
-    var footCell = ws.getRow(68).getCell(1);
-    var footerStyle = {
-      font: footCell.font ? JSON.parse(JSON.stringify(footCell.font)) : undefined,
-      alignment: footCell.alignment ? JSON.parse(JSON.stringify(footCell.alignment)) : undefined
+  function appRowToFlight(row) {
+    return {
+      flt: row.flt,
+      ac: row.ac,
+      rtg: row.rtg,
+      std: row.std,
+      coGen: row.gen,
+      coPer: row.per,
+      coDoc: row.doc,
+      coTransit: row.transit,
+      buDone: row.bu,
+      days: OPS_KEYS.map(function (k) {
+        var v = row.ops[k];
+        if (v == null || String(v).trim() === "") return null;
+        return String(v);
+      }),
+      remark: row.remark || ""
     };
-
-    ws.spliceRows(6, 63);
-
-    var n = state.rows.length;
-    var dataRows = Math.max(n, 1);
-    var emptyRows = [];
-    for (var er = 0; er < dataRows; er++) emptyRows.push([]);
-    ws.spliceRows.apply(ws, [6, 0].concat(emptyRows));
-
-    var firstDataExcel = 6;
-    var lastDataExcel = 5 + dataRows;
-
-    function applyBaseStyle(cell, colNumber) {
-      var st = stylesR6[colNumber];
-      if (!st) return;
-      if (st.font) cell.font = JSON.parse(JSON.stringify(st.font));
-      if (st.fill) cell.fill = cloneFill(st.fill);
-      if (st.border) cell.border = JSON.parse(JSON.stringify(st.border));
-      if (st.alignment) cell.alignment = JSON.parse(JSON.stringify(st.alignment));
-    }
-
-    for (var i = 0; i < dataRows; i++) {
-      var row = n > 0 ? state.rows[i] : null;
-      if (!row) row = { ops: emptyOps() };
-      var excelRow = 6 + i;
-      var r = ws.getRow(excelRow);
-      var argb = hexToArgbForExcel(rowColorForFlight(row.flt));
-      var vals = [
-        row.flt,
-        row.ac,
-        row.rtg,
-        row.std,
-        row.gen,
-        row.per,
-        row.doc,
-        row.transit,
-        row.bu,
-        row.ops.mon,
-        row.ops.tue,
-        row.ops.wed,
-        row.ops.thu,
-        row.ops.fri,
-        row.ops.sat,
-        row.ops.sun,
-        row.remark,
-        ""
-      ];
-      for (var c = 1; c <= 18; c++) {
-        var cell = r.getCell(c);
-        applyBaseStyle(cell, c);
-        cell.value = vals[c - 1] != null ? vals[c - 1] : "";
-        var cf = cell.font ? JSON.parse(JSON.stringify(cell.font)) : { name: "Arial", size: 12, bold: true };
-        cf.color = { argb: argb };
-        cell.font = cf;
-      }
-    }
-
-    var footerRow = 6 + dataRows;
-    ws.spliceRows(footerRow, 0, []);
-    var fr = ws.getRow(footerRow);
-    ws.mergeCells(footerRow, 1, footerRow, 9);
-    fr.getCell(1).value = "TOTAL";
-    if (footerStyle.font) fr.getCell(1).font = JSON.parse(JSON.stringify(footerStyle.font));
-    if (footerStyle.alignment) fr.getCell(1).alignment = JSON.parse(JSON.stringify(footerStyle.alignment));
-
-    for (var fc = 10; fc <= 16; fc++) {
-      var L = String.fromCharCode(64 + fc);
-      var fcell = fr.getCell(fc);
-      applyBaseStyle(fcell, fc);
-      fcell.value = {
-        formula: "COUNTIF(" + L + firstDataExcel + ":" + L + lastDataExcel + ',"=x")',
-        result: 0
-      };
-    }
-
-    while (ws.rowCount > footerRow) {
-      ws.spliceRows(footerRow + 1, 1);
-    }
-
-    var buf = await wb.xlsx.writeBuffer();
-    var d = new Date();
-    var ds =
-      d.getFullYear() +
-      pad2(d.getMonth() + 1) +
-      pad2(d.getDate());
-    var blob = new Blob([buf], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "cutoff-scsc-" + ds + ".xlsx";
-    a.click();
-    URL.revokeObjectURL(a.href);
   }
 
   /* ===== TableRenderer — bảng màn hình (DOM an toàn) ===== */
@@ -1518,7 +1378,25 @@
     });
 
     document.getElementById("btnExportExcel").addEventListener("click", function () {
-      exportToExcel(state).catch(function (err) {
+      if (typeof ExcelJS === "undefined") {
+        alert("Thiếu exceljs.min.js — đặt file này cạnh index.html.");
+        return;
+      }
+      if (typeof exportFlightSchedule !== "function") {
+        alert("Thiếu exportFlightSchedule.bundle.js — chạy npm install && npm run build.");
+        return;
+      }
+      var q = (filterInput && filterInput.value) || "";
+      q = q.trim().toLowerCase();
+      var rowsToExport = !q
+        ? state.rows.slice()
+        : state.rows.filter(function (r) {
+            return rowMatchesFilter(r, q);
+          });
+      var flights = rowsToExport.map(appRowToFlight);
+      var udRaw = state.meta && state.meta.updatedDate ? String(state.meta.updatedDate) : "08APR26";
+      var ud = formatUpdatedDateForExport(udRaw);
+      exportFlightSchedule({ flights: flights, updatedDate: ud }).catch(function (err) {
         alert("Xuất Excel: " + (err && err.message ? err.message : err));
       });
     });
