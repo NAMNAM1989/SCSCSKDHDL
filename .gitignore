@@ -31,3 +31,12 @@ tmp/
 .env.*.local
 *.pem
 *.key
+
+# Dữ liệu nội bộ SCSC — KHÔNG COMMIT (INTERNAL USE ONLY)
+*.xlsx
+*.xls
+*.xlsm
+cutoff-embedded-b64.js
+EXP*.xlsx
+Required*.xlsx
+Required*.xls
