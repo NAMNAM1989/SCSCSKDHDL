@@ -142,7 +142,7 @@ export function ScheduleClient({
   };
 
   return (
-    <div className="pb-28">
+    <div className="pb-28 lg:pb-8">
       <div ref={printRef} className="hidden print:block" aria-hidden />
 
       <AppHeader
@@ -164,7 +164,7 @@ export function ScheduleClient({
             </Button>
             <Button
               variant="ghost"
-              className="!min-h-10 !min-w-10 !px-2"
+              className="!min-h-10 !min-w-10 !px-2 lg:hidden"
               aria-label="Menu thao tác"
               onClick={() => setMenuOpen((o) => !o)}
             >
@@ -174,13 +174,45 @@ export function ScheduleClient({
         }
       />
 
+      {/* Desktop: thanh thao tác luôn hiện */}
+      <div className="hidden border-b border-slate-200/80 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-900/50 lg:block">
+        <div className="mx-auto flex max-w-2xl flex-wrap gap-2 px-4 py-3 lg:max-w-[min(100%,1600px)] lg:px-8">
+          <Button variant="secondary" onClick={handlePrint}>
+            <Printer className="mr-2 h-4 w-4" /> In PDF
+          </Button>
+          <Button variant="secondary" onClick={() => exportExcel().catch(alert)}>
+            Export Excel
+          </Button>
+          <Button variant="secondary" onClick={exportJson}>
+            Export JSON
+          </Button>
+          <Button variant="secondary" onClick={() => jsonRef.current?.click()}>
+            Import JSON
+          </Button>
+          <Button variant="secondary" onClick={() => xlsxRef.current?.click()}>
+            Import Excel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => {
+              if (!confirm("Xoá toàn bộ nháp?")) return;
+              if (!confirm("Xác nhận lần 2 — không hoàn tác.")) return;
+              clearDraft();
+            }}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Xoá nháp
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile: menu gập */}
       <AnimatePresence>
         {menuOpen ? (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-b border-slate-200/80 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-900/50"
+            className="overflow-hidden border-b border-slate-200/80 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-900/50 lg:hidden"
           >
             <div className="mx-auto flex max-w-2xl flex-wrap gap-2 px-4 py-3">
               <Button variant="secondary" onClick={handlePrint}>
@@ -250,46 +282,50 @@ export function ScheduleClient({
         }}
       />
 
-      <main className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
-        <Card>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
-            Updated
-          </label>
-          <Input
-            value={state.meta.updatedDate}
-            onChange={(e) => setMeta({ updatedDate: e.target.value.trim() || "08APR26" })}
-            placeholder="08APR26"
-            maxLength={12}
-          />
-        </Card>
+      <main className="mx-auto max-w-2xl space-y-4 px-4 pt-4 lg:max-w-[min(100%,1600px)] lg:space-y-5 lg:px-8">
+        <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+          <Card>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+              Updated
+            </label>
+            <Input
+              value={state.meta.updatedDate}
+              onChange={(e) =>
+                setMeta({ updatedDate: e.target.value.trim() || "08APR26" })
+              }
+              placeholder="08APR26"
+              maxLength={12}
+            />
+          </Card>
 
-        <Card>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
-            {mode === "search" ? "Tìm chuyến" : "Lọc nhanh"}
-          </label>
-          <Input
-            ref={mode === "search" ? searchRef : undefined}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="Flt, A/C, RTG…"
-          />
-        </Card>
+          <Card>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+              {mode === "search" ? "Tìm chuyến" : "Lọc nhanh"}
+            </label>
+            <Input
+              ref={mode === "search" ? searchRef : undefined}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Flt, A/C, RTG…"
+            />
+          </Card>
+        </div>
 
-        <div className="flex gap-2">
-          <Button variant="primary" className="flex-1" onClick={addRow}>
+        <div className="flex gap-2 lg:justify-start">
+          <Button variant="primary" className="w-full lg:w-auto lg:min-w-[200px]" onClick={addRow}>
             + Thêm chuyến
           </Button>
         </div>
 
-        <p className="text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
-          Ô đỏ: khác mẫu gốc sau khi đổi STD. OPS: tap = X; Shift+tap / double = gõ giờ.
+        <p className="text-[13px] leading-relaxed text-slate-500 dark:text-slate-400 lg:text-sm">
+          Ô đỏ: khác mẫu gốc sau khi đổi STD. OPS: chuột / tap = X; Shift+click / double = gõ giờ.
         </p>
 
         <Card className="!p-0 overflow-hidden">
-          <div className="scrollbar-thin max-h-[min(70vh,560px)] overflow-auto">
-            <table className="w-max min-w-full border-separate border-spacing-0 text-left text-[13px]">
+          <div className="scrollbar-thin max-h-[min(70vh,560px)] overflow-auto lg:max-h-[min(82vh,900px)]">
+            <table className="w-max min-w-full border-separate border-spacing-0 text-left text-[13px] lg:text-sm">
               <thead>
-                <tr className="sticky top-0 z-10 bg-slate-100/95 text-[10px] font-bold uppercase tracking-wider text-amber-700 backdrop-blur dark:bg-slate-900/95 dark:text-amber-400">
+                <tr className="sticky top-0 z-10 bg-slate-100/95 text-[10px] font-bold uppercase tracking-wider text-amber-700 backdrop-blur dark:bg-slate-900/95 dark:text-amber-400 lg:text-[11px]">
                   <th className="border-b border-amber-500/40 px-1 py-2" />
                   <th className="border-b border-amber-500/40 px-1 py-2">#</th>
                   <th className="border-b border-amber-500/40 px-1 py-2">Flt</th>

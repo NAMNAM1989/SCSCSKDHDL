@@ -13,9 +13,9 @@ export default function ProfilePage() {
   const { clearDraft } = useSchedule();
 
   return (
-    <div className="pb-28">
+    <div className="pb-28 lg:pb-8">
       <AppHeader title="Profile" subtitle="Cài đặt nhanh" />
-      <main className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
+      <main className="mx-auto max-w-2xl space-y-4 px-4 pt-4 lg:max-w-[min(100%,1600px)] lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}

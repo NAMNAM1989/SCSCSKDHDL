@@ -8,7 +8,7 @@ import { Bell, FileSpreadsheet, FileUp } from "lucide-react";
 const items = [
   {
     title: "Import / Export",
-    desc: "Dùng menu ⋮ trên Home để nhập xuất JSON hoặc Excel.",
+    desc: "Trên desktop: thanh công cụ ngay dưới header. Trên điện thoại: menu ⋮ trên Home.",
     icon: FileUp,
   },
   {
@@ -25,9 +25,9 @@ const items = [
 
 export default function ActivityPage() {
   return (
-    <div className="pb-28">
+    <div className="pb-28 lg:pb-8">
       <AppHeader title="Activity" subtitle="Mẹo & luồng làm việc" />
-      <main className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
+      <main className="mx-auto max-w-2xl space-y-4 px-4 pt-4 lg:max-w-[min(100%,1600px)] lg:px-8">
         {items.map((it, i) => (
           <motion.div
             key={it.title}

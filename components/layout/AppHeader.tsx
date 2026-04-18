@@ -19,7 +19,7 @@ export function AppHeader({
         "sticky top-0 z-40 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/75"
       )}
     >
-      <div className="mx-auto flex max-w-2xl items-start justify-between gap-3 px-4 pb-3 pt-[max(env(safe-area-inset-top),0.75rem)]">
+      <div className="mx-auto flex max-w-2xl items-start justify-between gap-3 px-4 pb-3 pt-[max(env(safe-area-inset-top),0.75rem)] lg:max-w-[min(100%,1600px)] lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
