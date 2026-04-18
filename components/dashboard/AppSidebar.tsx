@@ -5,6 +5,7 @@ import { useDashboardShell } from "@/components/dashboard/dashboard-shell-contex
 import { cn } from "@/lib/cn";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export function AppSidebar() {
@@ -27,15 +28,20 @@ export function AppSidebar() {
             sidebarCollapsed && "justify-center"
           )}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-600 text-xs font-bold text-white shadow-sm shadow-brand-500/25">
-            C
-          </span>
+          <Image
+            src="/logo-scsc.png"
+            alt="SCSC"
+            width={200}
+            height={48}
+            priority
+            className={cn(
+              "h-8 w-auto shrink-0 object-contain object-left dark:brightness-[0.98]",
+              sidebarCollapsed ? "max-w-[52px]" : "max-w-[min(100%,11rem)]"
+            )}
+          />
           {!sidebarCollapsed ? (
-            <span className="truncate text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-              Cutoff{" "}
-              <span className="font-normal text-zinc-500 dark:text-zinc-400">
-                SCSC
-              </span>
+            <span className="truncate text-xs font-medium leading-tight text-zinc-500 dark:text-zinc-400">
+              Export Flight Schedule & Handling
             </span>
           ) : null}
         </Link>

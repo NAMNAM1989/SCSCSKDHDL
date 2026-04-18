@@ -3,6 +3,7 @@
 import { SidebarNav } from "@/components/dashboard/SidebarNav";
 import { useDashboardShell } from "@/components/dashboard/dashboard-shell-context";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 
 export function MobileDrawer() {
@@ -31,14 +32,19 @@ export function MobileDrawer() {
             <div className="flex h-14 items-center border-b border-zinc-100 px-4 dark:border-zinc-800/80">
               <Link
                 href="/"
-                className="flex items-center gap-2"
+                className="flex min-w-0 items-center gap-2"
                 onClick={() => setMobileNavOpen(false)}
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 text-xs font-bold text-white shadow-md shadow-brand-500/20">
-                  C
-                </span>
-                <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                  Cutoff <span className="font-normal text-zinc-500">SCSC</span>
+                <Image
+                  src="/logo-scsc.png"
+                  alt="SCSC"
+                  width={200}
+                  height={48}
+                  priority
+                  className="h-9 w-auto max-w-[min(100%,12rem)] shrink-0 object-contain object-left dark:brightness-[0.98]"
+                />
+                <span className="min-w-0 text-xs font-medium leading-snug text-zinc-500 dark:text-zinc-400">
+                  Export Flight Schedule & Handling
                 </span>
               </Link>
             </div>

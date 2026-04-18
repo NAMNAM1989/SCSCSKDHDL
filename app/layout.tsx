@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Flight Schedule & Handling",
+  title: "Export Flight Schedule & Handling",
   description: "SCSC / OPS / EXP — INTERNAL USE ONLY",
 };
 
