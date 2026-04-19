@@ -27,8 +27,10 @@ import { isNAVal, minutesBefore, smartFormatTimeCell } from "@/lib/schedule/time
 import {
   applySyncRuntimeOverride,
   getSyncDocId,
+  hasEmbeddedSupabaseEnv,
   isSupabaseConfigured,
 } from "@/lib/sync/env";
+import { readSyncPrefsFromLocalStorage } from "@/lib/sync/syncLocalPrefs";
 import { statesEqual } from "@/lib/sync/hydrate";
 import {
   NEVER_SYNCED_AT,
@@ -138,12 +140,22 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     setLastRemoteAt(t === NEVER_SYNCED_AT ? null : t);
   }, []);
 
-  /** Tải cấu hình Supabase từ sync-config.json khi không có NEXT_PUBLIC_* lúc build (Railway runtime). */
+  /**
+   * Bootstrap Supabase: (1) NEXT_PUBLIC_* build (2) localStorage thiết bị
+   * (3) sync-config.json do Railway/Docker ghi — hiện production thường là {} nếu chưa đặt SYNC_*.
+   */
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        if (isSupabaseConfigured()) return;
+        if (hasEmbeddedSupabaseEnv()) {
+          return;
+        }
+        const local = readSyncPrefsFromLocalStorage();
+        if (local) {
+          applySyncRuntimeOverride(local);
+          return;
+        }
         const r = await fetch("/sync-config.json", { cache: "no-store" });
         if (!r.ok) return;
         const j = (await r.json()) as Record<string, unknown>;
@@ -159,7 +171,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
           });
         }
       } catch {
-        /* giữ chỉ localStorage */
+        /* giữ chỉ dữ liệu lịch cục bộ */
       } finally {
         if (!cancelled) setSyncRuntimeReady(true);
       }

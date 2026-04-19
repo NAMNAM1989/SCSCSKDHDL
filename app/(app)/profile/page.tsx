@@ -1,6 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { CloudSyncSettings } from "@/components/settings/CloudSyncSettings";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { useSchedule } from "@/components/providers/ScheduleProvider";
@@ -19,6 +20,15 @@ export default function ProfilePage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2">
+        <Card className="p-6 md:col-span-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Supabase — đồng bộ điện thoại và máy khác
+          </p>
+          <div className="mt-4">
+            <CloudSyncSettings />
+          </div>
+        </Card>
+
         <Card className="p-6">
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             Giao diện
@@ -57,28 +67,20 @@ export default function ProfilePage() {
               </>
             ) : (
               <>
-                Chưa bật cloud: thêm{" "}
-                <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
-                  NEXT_PUBLIC_SUPABASE_URL
-                </code>{" "}
-                +{" "}
-                <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
-                  NEXT_PUBLIC_SUPABASE_ANON_KEY
-                </code>{" "}
-                lúc build, hoặc trên Railway đặt{" "}
+                Chưa kết nối cloud. Nhập Supabase ở mục đầu trang (khuyến nghị), hoặc
+                trên Railway thêm biến{" "}
                 <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
                   SYNC_SUPABASE_URL
                 </code>{" "}
-                /{" "}
+                +{" "}
                 <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
                   SYNC_SUPABASE_ANON_KEY
                 </code>{" "}
-                (file{" "}
+                để file{" "}
                 <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
-                  sync-config.json
+                  /sync-config.json
                 </code>{" "}
-                tạo khi container khởi động). Chỉ tab cùng máy đồng bộ qua
-                BroadcastChannel.
+                có dữ liệu. Chỉ tab cùng máy: BroadcastChannel.
               </>
             )}
           </p>

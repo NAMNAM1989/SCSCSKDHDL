@@ -17,6 +17,19 @@ export function applySyncRuntimeOverride(c: RuntimeOverride): void {
   void import("./remoteSupabase").then((m) => m.resetSupabaseClient());
 }
 
+/** Xoá override (ví dụ user gỡ cấu hình cloud trên máy này). */
+export function clearSyncRuntimeOverride(): void {
+  runtimeOverride = null;
+  void import("./remoteSupabase").then((m) => m.resetSupabaseClient());
+}
+
+/** Đã nhúng URL + anon key lúc build (NEXT_PUBLIC_*). */
+export function hasEmbeddedSupabaseEnv(): boolean {
+  const u = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const k = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  return Boolean(u && k);
+}
+
 export function getSupabaseUrl(): string | undefined {
   const v = runtimeOverride?.url ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   return typeof v === "string" && v.trim() ? v.trim() : undefined;
