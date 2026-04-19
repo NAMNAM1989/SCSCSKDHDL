@@ -7,7 +7,8 @@ import { OPS_DAY_LABELS, OPS_KEYS } from "@/lib/schedule/constants";
 import { fieldDiffersOrig } from "@/lib/schedule/rowModel";
 import type { OpsKey, ScheduleRow } from "@/lib/schedule/types";
 import { cn } from "@/lib/cn";
-import { Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { OpsCell } from "./OpsCell";
 
 type Props = {
@@ -27,8 +28,61 @@ export function ScheduleMobileCards({
   onUpdateOps,
   onRemoveRow,
 }: Props) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!rows.length) {
+      setExpanded({});
+      return;
+    }
+    setExpanded((prev) => {
+      const next: Record<string, boolean> = {};
+      for (const r of rows) {
+        next[r.id] = prev[r.id] ?? false;
+      }
+      if (!Object.values(next).some(Boolean)) {
+        next[rows[0].id] = true;
+      }
+      return next;
+    });
+  }, [rows]);
+
+  const expandAll = () => {
+    const next: Record<string, boolean> = {};
+    for (const r of rows) next[r.id] = true;
+    setExpanded(next);
+  };
+
+  const collapseAll = () => {
+    const next: Record<string, boolean> = {};
+    for (const r of rows) next[r.id] = false;
+    setExpanded(next);
+  };
+
+  const toggleRow = (id: string) =>
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+
   return (
     <div className="flex w-full min-w-0 flex-col gap-2 pb-1 lg:hidden">
+      <div className="flex items-center justify-between rounded-lg border border-zinc-200/80 bg-white px-2.5 py-1.5 text-[11px] text-zinc-600 shadow-sm dark:border-zinc-700/80 dark:bg-zinc-900 dark:text-zinc-300">
+        <span className="font-medium">{rows.length} chuyến</span>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            className="rounded-md px-2 py-1 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            onClick={expandAll}
+          >
+            Mở hết
+          </button>
+          <button
+            type="button"
+            className="rounded-md px-2 py-1 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            onClick={collapseAll}
+          >
+            Thu gọn
+          </button>
+        </div>
+      </div>
       {rows.map((row, idx) => (
         <Card
           key={row.id}
@@ -46,7 +100,24 @@ export function ScheduleMobileCards({
                 value={String(row.flt ?? "")}
                 onChange={(e) => onUpdateField(row.id, "flt", e.target.value)}
               />
+              <div className="mt-1 flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+                {row.ac ? <span className="truncate rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-800">{row.ac}</span> : null}
+                {row.rtg ? <span className="truncate rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-800">{row.rtg}</span> : null}
+                {row.std ? <span className="truncate rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-800">STD {row.std}</span> : null}
+              </div>
             </div>
+            <Button
+              variant="ghost"
+              className="!h-9 !min-h-9 !w-9 shrink-0 !p-0 text-zinc-500"
+              aria-label={expanded[row.id] ? "Thu gọn chi tiết" : "Mở chi tiết"}
+              onClick={() => toggleRow(row.id)}
+            >
+              {expanded[row.id] ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
             <Button
               variant="ghost"
               className="!h-9 !min-h-9 !w-9 shrink-0 !p-0 text-zinc-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400"
@@ -59,6 +130,7 @@ export function ScheduleMobileCards({
             </Button>
           </div>
 
+          {expanded[row.id] ? (
           <div className="space-y-2 px-2.5 py-2">
             <div className="grid grid-cols-2 gap-2">
               {(
@@ -166,6 +238,7 @@ export function ScheduleMobileCards({
               />
             </div>
           </div>
+          ) : null}
         </Card>
       ))}
     </div>

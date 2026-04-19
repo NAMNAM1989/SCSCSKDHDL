@@ -135,10 +135,10 @@ export function ScheduleClient({
     <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden lg:min-h-0 lg:flex-1 lg:overflow-hidden">
       <div ref={printRef} className="hidden print:block" aria-hidden />
 
-      {/* Mobile: menu gập — gọn, nút nhỏ */}
+      {/* Mobile: menu gập dạng panel nổi phía trên thanh đáy */}
       {menuOpen ? (
-        <div className="mb-2 rounded-xl border border-zinc-200/90 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80 lg:hidden">
-          <div className="grid grid-cols-2 gap-1.5 p-2 sm:grid-cols-2 sm:gap-2">
+        <div className="fixed inset-x-2 bottom-[4.5rem] z-40 rounded-xl border border-zinc-200/90 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900/95 lg:hidden">
+          <div className="grid grid-cols-2 gap-1.5 p-2 sm:gap-2">
             <Button
               variant="secondary"
               className="!min-h-9 !justify-center !text-xs"
@@ -195,7 +195,7 @@ export function ScheduleClient({
         }}
       />
 
-      <main className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col gap-2 sm:max-w-2xl lg:mx-0 lg:max-w-none lg:min-h-0 lg:flex-1 lg:gap-3">
+      <main className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col gap-2 pb-20 sm:max-w-2xl lg:mx-0 lg:max-w-none lg:min-h-0 lg:flex-1 lg:gap-3 lg:pb-0">
         {/* Desktop: một hàng — công cụ + Updated + Lọc + Thêm chuyến */}
         <div className="mb-1 hidden min-w-0 gap-3 rounded-2xl border border-zinc-200/90 bg-white p-3 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50 lg:mb-3 lg:flex lg:flex-row lg:flex-wrap lg:items-center xl:flex-nowrap xl:gap-3">
           <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -331,13 +331,6 @@ export function ScheduleClient({
             </Card>
           </div>
 
-          <Button
-            variant="primary"
-            className="w-full !min-h-10 !rounded-lg !text-sm !font-semibold !shadow-sm !bg-gradient-to-r !from-brand-600 !to-violet-600 !text-white hover:!from-brand-700 hover:!to-violet-700 dark:!from-brand-500 dark:!to-violet-600 dark:hover:!from-brand-600 dark:hover:!to-violet-700"
-            onClick={addRow}
-          >
-            + Thêm chuyến
-          </Button>
         </div>
 
         <Card className="flex min-h-0 w-full min-w-0 flex-1 flex-col !overflow-hidden !rounded-lg !border-amber-700/35 !p-0 !shadow-sm dark:!border-slate-700 sm:!rounded-xl lg:!min-h-0 lg:!rounded-2xl lg:!shadow-md lg:!ring-1 lg:!ring-amber-600/25 dark:lg:!ring-amber-900/40">
@@ -532,6 +525,28 @@ export function ScheduleClient({
           </div>
         </Card>
       </main>
+
+      {/* Mobile sticky action bar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200/80 bg-white/95 px-2.5 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-6px_20px_rgba(0,0,0,0.08)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95 lg:hidden">
+        <div className="mx-auto flex w-full max-w-md items-center gap-2">
+          <Button
+            variant="secondary"
+            className="!min-h-10 !w-11 shrink-0 !rounded-lg !px-0"
+            aria-label="Mở menu thao tác"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="primary"
+            className="w-full !min-h-10 !rounded-lg !text-sm !font-semibold !shadow-sm !bg-gradient-to-r !from-brand-600 !to-violet-600 !text-white hover:!from-brand-700 hover:!to-violet-700 dark:!from-brand-500 dark:!to-violet-600 dark:hover:!from-brand-600 dark:hover:!to-violet-700"
+            onClick={addRow}
+          >
+            + Thêm chuyến
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
