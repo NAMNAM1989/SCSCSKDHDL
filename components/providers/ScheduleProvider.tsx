@@ -24,7 +24,11 @@ import {
 import { clearStorage, loadState, persistNow } from "@/lib/schedule/storage";
 import type { ScheduleMeta, ScheduleRow, ScheduleState } from "@/lib/schedule/types";
 import { isNAVal, minutesBefore, smartFormatTimeCell } from "@/lib/schedule/time";
-import { getSyncDocId, isSupabaseConfigured } from "@/lib/sync/env";
+import {
+  applySyncRuntimeOverride,
+  getSyncDocId,
+  isSupabaseConfigured,
+} from "@/lib/sync/env";
 import { statesEqual } from "@/lib/sync/hydrate";
 import {
   NEVER_SYNCED_AT,
@@ -80,6 +84,8 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const [filter, setFilter] = useState("");
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(null);
+  /** Sau khi đã thử env + fetch sync-config.json — tránh báo cloud tắt trong lúc tải cấu hình runtime */
+  const [syncRuntimeReady, setSyncRuntimeReady] = useState(false);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tabSyncRef = useRef<ReturnType<typeof createTabSync> | null>(null);
@@ -92,7 +98,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   }
 
   const pushRemote = useCallback(async (next: ScheduleState) => {
-    if (!isSupabaseConfigured()) return;
+    if (!syncRuntimeReady || !isSupabaseConfigured()) return;
     try {
       const ts = await upsertRemoteState(getSyncDocId(), next);
       if (ts) {
@@ -103,7 +109,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       setSyncError(String(e));
     }
-  }, []);
+  }, [syncRuntimeReady]);
 
   const persistImmediate = useCallback(
     (next: ScheduleState) => {
@@ -130,6 +136,37 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const t = getLastRemoteIso();
     setLastRemoteAt(t === NEVER_SYNCED_AT ? null : t);
+  }, []);
+
+  /** Tải cấu hình Supabase từ sync-config.json khi không có NEXT_PUBLIC_* lúc build (Railway runtime). */
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        if (isSupabaseConfigured()) return;
+        const r = await fetch("/sync-config.json", { cache: "no-store" });
+        if (!r.ok) return;
+        const j = (await r.json()) as Record<string, unknown>;
+        const url = typeof j.supabaseUrl === "string" ? j.supabaseUrl.trim() : "";
+        const key =
+          typeof j.supabaseAnonKey === "string" ? j.supabaseAnonKey.trim() : "";
+        const docRaw = typeof j.syncDocId === "string" ? j.syncDocId.trim() : "";
+        if (url && key) {
+          applySyncRuntimeOverride({
+            url,
+            key,
+            docId: docRaw || "default",
+          });
+        }
+      } catch {
+        /* giữ chỉ localStorage */
+      } finally {
+        if (!cancelled) setSyncRuntimeReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -171,7 +208,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
 
   /** Supabase: fetch ban đầu + realtime */
   useEffect(() => {
-    if (!isSupabaseConfigured()) return;
+    if (!syncRuntimeReady || !isSupabaseConfigured()) return;
     const docId = getSyncDocId();
     let cancelled = false;
     let unsubscribe = () => {};
@@ -225,7 +262,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       unsubscribe();
     };
-  }, []);
+  }, [syncRuntimeReady]);
 
   const setMeta = useCallback(
     (m: Partial<ScheduleMeta>) => {
@@ -385,11 +422,11 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
 
   const syncInfo = useMemo<SyncInfo>(
     () => ({
-      cloudEnabled: isSupabaseConfigured(),
+      cloudEnabled: syncRuntimeReady && isSupabaseConfigured(),
       lastRemoteAt,
       error: syncError,
     }),
-    [lastRemoteAt, syncError]
+    [syncRuntimeReady, lastRemoteAt, syncError]
   );
 
   const value = useMemo<Ctx>(

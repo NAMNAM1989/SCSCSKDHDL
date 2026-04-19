@@ -5,6 +5,11 @@ import type { ScheduleState } from "@/lib/schedule/types";
 
 let client: SupabaseClient | null = null;
 
+/** Gọi khi URL/key đổi (cấu hình runtime) để tạo client mới. */
+export function resetSupabaseClient(): void {
+  client = null;
+}
+
 function getClient(): SupabaseClient | null {
   const url = getSupabaseUrl();
   const key = getSupabaseAnonKey();

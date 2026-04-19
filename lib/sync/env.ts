@@ -1,17 +1,35 @@
-/** Biến môi trường — chỉ đọc phía client (NEXT_PUBLIC_*) */
+/** Biến môi trường build (NEXT_PUBLIC_*) + override runtime (sync-config.json / Docker). */
+
+type RuntimeOverride = {
+  url: string;
+  key: string;
+  docId: string;
+};
+
+let runtimeOverride: RuntimeOverride | null = null;
+
+/**
+ * Áp dụng URL/key từ sync-config.json (Railway / runtime).
+ * Dùng dynamic import để tránh vòng phụ thuộc với remoteSupabase.
+ */
+export function applySyncRuntimeOverride(c: RuntimeOverride): void {
+  runtimeOverride = c;
+  void import("./remoteSupabase").then((m) => m.resetSupabaseClient());
+}
 
 export function getSupabaseUrl(): string | undefined {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || undefined;
+  const v = runtimeOverride?.url ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return typeof v === "string" && v.trim() ? v.trim() : undefined;
 }
 
 export function getSupabaseAnonKey(): string | undefined {
-  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || undefined;
+  const v = runtimeOverride?.key ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return typeof v === "string" && v.trim() ? v.trim() : undefined;
 }
 
 export function getSyncDocId(): string {
-  return (
-    process.env.NEXT_PUBLIC_SYNC_DOC_ID?.trim() || "default"
-  );
+  const v = runtimeOverride?.docId ?? process.env.NEXT_PUBLIC_SYNC_DOC_ID;
+  return typeof v === "string" && v.trim() ? v.trim() : "default";
 }
 
 export function isSupabaseConfigured(): boolean {

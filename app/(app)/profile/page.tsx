@@ -57,11 +57,28 @@ export default function ProfilePage() {
               </>
             ) : (
               <>
-                Chưa cấu hình{" "}
+                Chưa bật cloud: thêm{" "}
                 <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
-                  NEXT_PUBLIC_SUPABASE_*
-                </code>
-                . Đồng bộ giữa tab cùng máy qua BroadcastChannel.
+                  NEXT_PUBLIC_SUPABASE_URL
+                </code>{" "}
+                +{" "}
+                <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
+                  NEXT_PUBLIC_SUPABASE_ANON_KEY
+                </code>{" "}
+                lúc build, hoặc trên Railway đặt{" "}
+                <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
+                  SYNC_SUPABASE_URL
+                </code>{" "}
+                /{" "}
+                <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
+                  SYNC_SUPABASE_ANON_KEY
+                </code>{" "}
+                (file{" "}
+                <code className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
+                  sync-config.json
+                </code>{" "}
+                tạo khi container khởi động). Chỉ tab cùng máy đồng bộ qua
+                BroadcastChannel.
               </>
             )}
           </p>
