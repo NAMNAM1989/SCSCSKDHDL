@@ -65,6 +65,22 @@ export function subscribeRemoteState(
   const sb = getClient();
   if (!sb) return () => {};
 
+  /**
+   * Luôn SELECT lại sau Realtime — payload.new đôi khi thiếu jsonb `payload`
+   * (logical replication / replica identity), khiến điện thoại không cập nhật.
+   */
+  let debounce: ReturnType<typeof setTimeout> | null = null;
+  const schedulePull = () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      debounce = null;
+      void fetchRemoteState(docId).then((r) => {
+        if (!r) return;
+        onChange(r.state, r.updatedAt);
+      });
+    }, 150);
+  };
+
   const realtimeChannel = sb
     .channel(`schedule_state:${docId}`)
     .on(
@@ -75,20 +91,18 @@ export function subscribeRemoteState(
         table: "schedule_state",
         filter: `id=eq.${docId}`,
       },
-      (payload) => {
-        const row = payload.new as {
-          payload?: unknown;
-          updated_at?: string;
-        } | null;
-        if (!row?.payload || typeof row.updated_at !== "string") return;
-        const state = hydrateScheduleState(row.payload);
-        if (!state) return;
-        onChange(state, row.updated_at);
+      () => {
+        schedulePull();
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        schedulePull();
+      }
+    });
 
   return () => {
+    if (debounce) clearTimeout(debounce);
     void sb.removeChannel(realtimeChannel);
   };
 }

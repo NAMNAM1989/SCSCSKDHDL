@@ -218,45 +218,22 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  /** Supabase: fetch ban đầu + realtime */
+  /**
+   * Supabase: fetch ban đầu + Realtime (refetch sau mỗi sự kiện) + polling
+   * để điện thoại / Safari vẫn bắt kịp khi WebSocket chậm hoặc nền bị đóng băng.
+   */
   useEffect(() => {
     if (!syncRuntimeReady || !isSupabaseConfigured()) return;
     const docId = getSyncDocId();
     let cancelled = false;
     let unsubscribe = () => {};
-
-    void (async () => {
-      const initialRows = loadState().rows.length;
-      const r = await fetchRemoteState(docId);
-      if (cancelled) return;
-      if (!r) {
-        unsubscribe = subscribeRemoteState(docId, (next, updatedAt) => {
-          applyRemoteFromServer(next, updatedAt);
-        });
-        return;
-      }
-      if (
-        new Date(r.updatedAt) > new Date(getLastRemoteIso()) &&
-        !shouldSkipEmptyRemoteOverwrite(r.state, initialRows)
-      ) {
-        setState(r.state);
-        persistNow(r.state);
-        setLastRemoteIso(r.updatedAt);
-        setLastRemoteAt(r.updatedAt);
-      }
-      if (cancelled) return;
-      unsubscribe = subscribeRemoteState(docId, (next, updatedAt) => {
-        applyRemoteFromServer(next, updatedAt);
-      });
-    })();
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
 
     function applyRemoteFromServer(next: ScheduleState, updatedAt: string) {
       setState((prev) => {
         if (statesEqual(prev, next)) return prev;
         if (new Date(updatedAt) <= new Date(getLastRemoteIso())) return prev;
-        if (
-          shouldSkipEmptyRemoteOverwrite(next, prev.rows.length)
-        ) {
+        if (shouldSkipEmptyRemoteOverwrite(next, prev.rows.length)) {
           return prev;
         }
         if (saveTimer.current) {
@@ -270,8 +247,49 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       });
     }
 
+    async function pullRemoteSnapshot() {
+      if (cancelled) return;
+      try {
+        const r = await fetchRemoteState(docId);
+        if (cancelled || !r) return;
+        applyRemoteFromServer(r.state, r.updatedAt);
+        setSyncError(null);
+      } catch (e) {
+        setSyncError(String(e));
+      }
+    }
+
+    void (async () => {
+      const initialRows = loadState().rows.length;
+      const r = await fetchRemoteState(docId);
+      if (cancelled) return;
+      if (
+        r &&
+        new Date(r.updatedAt) > new Date(getLastRemoteIso()) &&
+        !shouldSkipEmptyRemoteOverwrite(r.state, initialRows)
+      ) {
+        setState(r.state);
+        persistNow(r.state);
+        setLastRemoteIso(r.updatedAt);
+        setLastRemoteAt(r.updatedAt);
+      }
+      if (cancelled) return;
+      unsubscribe = subscribeRemoteState(docId, applyRemoteFromServer);
+      pollTimer = setInterval(() => {
+        void pullRemoteSnapshot();
+      }, 4000);
+      void pullRemoteSnapshot();
+    })();
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void pullRemoteSnapshot();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       cancelled = true;
+      if (pollTimer) clearInterval(pollTimer);
+      document.removeEventListener("visibilitychange", onVisible);
       unsubscribe();
     };
   }, [syncRuntimeReady]);
