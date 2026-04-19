@@ -1,7 +1,7 @@
 import { isNAVal } from "./time";
 import type { ScheduleState } from "./types";
 
-const PDF_TITLE = "EXPORT FLIGHT SCHEDULE & HANDLING";
+const PDF_TITLE = "SUM2025 FLT SKD & HDL";
 
 function escapeHtml(s: string): string {
   return String(s)
@@ -50,19 +50,15 @@ export function buildPrintHtml(state: ScheduleState): string {
     state.meta && state.meta.updatedDate
       ? String(state.meta.updatedDate)
       : "08APR26";
-  const printedAt = new Date().toLocaleString("vi-VN");
   const banner =
     '<div class="pdf-banner">' +
-    '<div class="pdf-banner__left">SCSC · OPS · EXP</div>' +
+    '<div class="pdf-banner__left">SCSC/OPS/EXP</div>' +
     '<div class="pdf-banner__center">' +
     '<div class="pdf-banner__title">' +
     escapeHtml(PDF_TITLE) +
     "</div>" +
-    '<div class="pdf-banner__updated">UPDATED: ' +
+    '<div class="pdf-banner__updated">UPDATED ' +
     escapeHtml(ud) +
-    "</div>" +
-    '<div class="pdf-banner__printed">PRINTED: ' +
-    escapeHtml(printedAt) +
     "</div></div>" +
     '<div class="pdf-banner__right">INTERNAL USE ONLY</div></div>';
 
@@ -95,15 +91,15 @@ export function buildPrintHtml(state: ScheduleState): string {
     '<th rowspan="2">RTG</th>' +
     '<th rowspan="2">STD</th>' +
     '<th colspan="4">Cut-off</th>' +
-    '<th rowspan="2">B/U<br/>DOC</th>' +
-    '<th colspan="7">OPS DAYS (WEEK)</th>' +
+    '<th rowspan="2">B/U done<br/>DOC out</th>' +
+    '<th colspan="7">OPS DAYS</th>' +
     '<th rowspan="2">REMARK</th>' +
     "</tr>" +
     "<tr>" +
-    "<th>GEN</th>" +
-    "<th>PER</th>" +
-    "<th>DOC</th>" +
-    "<th>TRANSIT</th>" +
+    "<th>time for<br/>GEN</th>" +
+    "<th>time for<br/>PER</th>" +
+    "<th>time for<br/>DOC</th>" +
+    "<th>time for<br/>transit</th>" +
     "<th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>" +
     '<th class="sun-col">Sun</th>' +
     "</tr>" +
@@ -142,7 +138,6 @@ export function buildPrintHtml(state: ScheduleState): string {
     colgroup +
     thead +
     body +
-    "</table></div>" +
-    '<div class="pdf-footer">SCSC Internal Ops · Generated from Export Flight Schedule & Handling</div>'
+    "</table></div>"
   );
 }

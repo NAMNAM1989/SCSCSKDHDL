@@ -27,11 +27,10 @@
 @media print {
   @page {
     size: A4 landscape;
-    margin: 0.75cm;
+    margin: 1cm;
   }
   body {
     @apply bg-white text-black p-0;
-    font-family: Arial, Helvetica, sans-serif;
   }
   .no-print {
     display: none !important;
@@ -43,13 +42,13 @@
     display: flex !important;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 0.2rem;
-    padding-bottom: 0.15rem;
-    border-bottom: 1.5px solid #111;
+    margin-bottom: 0.35rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid #000;
   }
   .pdf-banner__left {
     font-weight: 700;
-    font-size: 9pt;
+    font-size: 11pt;
     color: #000 !important;
   }
   .pdf-banner__center {
@@ -58,81 +57,68 @@
     min-width: 0;
   }
   .pdf-banner__title {
-    font-size: 13pt;
+    font-size: 16pt;
     font-weight: 700;
-    color: #1f2937 !important;
+    color: #c00000 !important;
     margin: 0;
     line-height: 1.15;
-    letter-spacing: 0.02em;
   }
   .pdf-banner__updated {
-    margin-top: 0.08rem;
-    font-size: 8.5pt;
+    margin-top: 0.15rem;
+    font-size: 11pt;
     font-weight: 700;
-    color: #0369a1 !important;
-  }
-  .pdf-banner__printed {
-    margin-top: 0.05rem;
-    font-size: 8pt;
-    color: #4b5563 !important;
+    color: #00b050 !important;
+    text-decoration: underline;
   }
   .pdf-banner__right {
-    font-size: 8pt;
+    font-size: 10pt;
     font-weight: 700;
     color: #000 !important;
     white-space: nowrap;
   }
   .pdf-table-wrap {
-    margin-top: 0.12rem;
+    margin-top: 0.2rem;
     overflow: visible;
   }
   table.pdf-table {
     width: 100%;
     border-collapse: collapse !important;
-    font-size: 8.5pt;
+    font-size: 10pt;
     table-layout: fixed;
   }
   table.pdf-table th,
   table.pdf-table td {
-    border: 0.8px solid #2f2f2f !important;
-    padding: 0.1rem 0.14rem !important;
+    border: 1px solid #000 !important;
+    padding: 0.12rem 0.18rem !important;
     text-align: center !important;
     vertical-align: middle !important;
     word-wrap: break-word;
-    line-height: 1.15;
   }
   table.pdf-table thead th {
-    background: #f3f4f6 !important;
-    color: #111827 !important;
+    background: #ffff00 !important;
+    color: #000 !important;
     font-weight: 700 !important;
-    font-size: 8.3pt !important;
-    letter-spacing: 0.02em;
+    font-size: 11pt !important;
   }
   table.pdf-table thead th.sun-col,
   table.pdf-table tbody td.sun-col {
-    background: #fde8e8 !important;
+    background: #fce4e4 !important;
   }
   table.pdf-table tbody td {
-    font-size: 8.2pt;
+    font-size: 10pt;
     background: #fff !important;
   }
   table.pdf-table tbody tr:nth-child(even) td:not(.sun-col) {
-    background: #fafafa !important;
+    background: #fff !important;
   }
   table.pdf-table td.remark-col {
     text-align: left !important;
-    font-size: 7.8pt !important;
+    font-size: 9pt !important;
     white-space: normal !important;
   }
   .pdf-na {
     color: #e06666 !important;
     font-style: italic !important;
-  }
-  .pdf-footer {
-    margin-top: 0.14rem;
-    font-size: 7.5pt;
-    color: #6b7280 !important;
-    text-align: right;
   }
 }
 
