@@ -27,10 +27,10 @@ export function AppTopbar() {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-zinc-200/80 bg-white/80 px-3 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/80 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center gap-2 border-b border-zinc-200/80 bg-white/90 px-2.5 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/90 sm:h-14 sm:gap-3 sm:px-4 lg:px-6">
       <button
         type="button"
-        className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200/80 bg-white text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800 lg:hidden"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-200/80 bg-white text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800 sm:h-10 sm:w-10 sm:rounded-xl lg:hidden"
         aria-label="Mở menu"
         aria-expanded={mobileNavOpen}
         onClick={toggleMobileNav}
@@ -60,11 +60,11 @@ export function AppTopbar() {
 
       <div className="min-w-0 flex-1 lg:flex lg:items-center lg:gap-6">
         <div className="min-w-0 lg:max-w-xs">
-          <h1 className="truncate text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-lg">
+          <h1 className="truncate text-[15px] font-semibold leading-tight tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-base sm:leading-normal md:text-lg">
             {meta.title}
           </h1>
           {meta.desc ? (
-            <p className="hidden truncate text-xs text-zinc-500 dark:text-zinc-400 sm:block">
+            <p className="hidden truncate text-[11px] text-zinc-500 dark:text-zinc-400 sm:block sm:text-xs">
               {meta.desc}
             </p>
           ) : null}
@@ -82,11 +82,11 @@ export function AppTopbar() {
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+      <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
         <button
           type="button"
           className={cn(
-            "relative flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+            "relative hidden h-9 w-9 items-center justify-center rounded-lg border border-transparent text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 sm:flex sm:h-10 sm:w-10 sm:rounded-xl"
           )}
           aria-label="Thông báo"
         >
@@ -95,7 +95,7 @@ export function AppTopbar() {
         </button>
         <Button
           variant="ghost"
-          className="!h-10 !min-h-10 !min-w-10 !rounded-xl !px-0"
+          className="!h-9 !min-h-9 !min-w-9 !rounded-lg !px-0 sm:!h-10 sm:!min-h-10 sm:!min-w-10 sm:!rounded-xl"
           aria-label="Chế độ sáng / tối"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >

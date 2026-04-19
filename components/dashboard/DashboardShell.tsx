@@ -29,8 +29,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             <div
               className={
                 wideDataPage
-                  ? "w-full max-w-none px-2 py-5 sm:px-3 md:px-4 lg:px-5 xl:px-6 2xl:px-8 lg:py-6"
-                  : "mx-auto w-full max-w-[1600px] px-3 py-5 sm:px-5 lg:px-8 lg:py-6"
+                  ? "w-full max-w-none px-2.5 py-3 sm:px-3 sm:py-4 md:px-4 lg:px-5 xl:px-6 2xl:px-8 lg:py-6"
+                  : "mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-5 sm:py-5 lg:px-8 lg:py-6"
               }
             >
               {children}

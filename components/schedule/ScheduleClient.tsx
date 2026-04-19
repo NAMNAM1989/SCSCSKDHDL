@@ -135,32 +135,34 @@ export function ScheduleClient({
     <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden lg:min-h-0 lg:flex-1 lg:overflow-hidden">
       <div ref={printRef} className="hidden print:block" aria-hidden />
 
-      <div className="mb-3 flex items-center justify-end gap-2 lg:hidden">
-        <Button
-          variant="secondary"
-          className="!min-h-10 !min-w-10 !rounded-xl !px-2"
-          aria-label="Menu thao tác xuất / nhập"
-          onClick={() => setMenuOpen((o) => !o)}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-
-      {/* Mobile: menu gập */}
+      {/* Mobile: menu gập — gọn, nút nhỏ */}
       {menuOpen ? (
-        <div className="mb-4 rounded-2xl border border-zinc-200 bg-zinc-50/90 dark:border-zinc-800 dark:bg-zinc-900/50 lg:hidden">
-          <div className="flex flex-wrap gap-2 p-3">
-            <Button variant="secondary" onClick={handlePrint}>
-              <Printer className="mr-2 h-4 w-4" /> In PDF
+        <div className="mb-2 rounded-xl border border-zinc-200/90 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80 lg:hidden">
+          <div className="grid grid-cols-2 gap-1.5 p-2 sm:grid-cols-2 sm:gap-2">
+            <Button
+              variant="secondary"
+              className="!min-h-9 !justify-center !text-xs"
+              onClick={handlePrint}
+            >
+              <Printer className="mr-1 h-3.5 w-3.5" /> In PDF
             </Button>
-            <Button variant="secondary" onClick={() => exportExcel().catch(alert)}>
-              Export Excel
+            <Button
+              variant="secondary"
+              className="!min-h-9 !justify-center !text-xs"
+              onClick={() => exportExcel().catch(alert)}
+            >
+              Export
             </Button>
-            <Button variant="secondary" onClick={() => xlsxRef.current?.click()}>
-              Import Excel
+            <Button
+              variant="secondary"
+              className="!min-h-9 !justify-center !text-xs"
+              onClick={() => xlsxRef.current?.click()}
+            >
+              Import
             </Button>
             <Button
               variant="danger"
+              className="!min-h-9 !justify-center !text-xs"
               onClick={() => {
                 if (!confirm("Xoá toàn bộ nháp?")) return;
                 if (!confirm("Xác nhận lần 2 — không hoàn tác.")) return;
@@ -168,7 +170,7 @@ export function ScheduleClient({
                 setMenuOpen(false);
               }}
             >
-              <Trash2 className="mr-2 h-4 w-4" /> Xoá nháp
+              <Trash2 className="mr-1 h-3.5 w-3.5" /> Xoá
             </Button>
           </div>
         </div>
@@ -193,7 +195,7 @@ export function ScheduleClient({
         }}
       />
 
-      <main className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-3 lg:mx-0 lg:max-w-none lg:min-h-0 lg:flex-1 lg:gap-3">
+      <main className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col gap-2 sm:max-w-2xl lg:mx-0 lg:max-w-none lg:min-h-0 lg:flex-1 lg:gap-3">
         {/* Desktop: một hàng — công cụ + Updated + Lọc + Thêm chuyến */}
         <div className="mb-1 hidden min-w-0 gap-3 rounded-2xl border border-zinc-200/90 bg-white p-3 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50 lg:mb-3 lg:flex lg:flex-row lg:flex-wrap lg:items-center xl:flex-nowrap xl:gap-3">
           <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -275,55 +277,71 @@ export function ScheduleClient({
           </Button>
         </div>
 
-        {/* Mobile / tablet: thẻ + nút (không gộp 1 hàng) */}
-        <div className="grid shrink-0 gap-3 lg:hidden">
-          <div className="mx-auto grid w-full max-w-md gap-3 md:max-w-none md:grid-cols-2">
-            <Card>
-              <label
-                htmlFor="schedule-updated-mb"
-                className="mb-1 block text-xs text-slate-600 dark:text-slate-400"
-              >
-                Updated
-              </label>
-              <Input
-                id="schedule-updated-mb"
-                value={state.meta.updatedDate}
-                onChange={(e) =>
-                  setMeta({ updatedDate: e.target.value.trim() || "08APR26" })
-                }
-                placeholder="08APR26"
-                maxLength={12}
-              />
-            </Card>
-
-            <Card>
-              <label
-                htmlFor="schedule-filter-mb"
-                className="mb-1 block text-xs text-slate-600 dark:text-slate-400"
-              >
-                {mode === "search" ? "Tìm chuyến" : "Lọc nhanh"}
-              </label>
-              <Input
-                id="schedule-filter-mb"
-                ref={mode === "search" ? searchRef : undefined}
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                placeholder="Flt, A/C, RTG…"
-              />
+        {/* Mobile: một hàng — menu + Updated/Lọc gọn */}
+        <div className="flex shrink-0 flex-col gap-2 lg:hidden">
+          <div className="flex items-stretch gap-2">
+            <Button
+              variant="secondary"
+              className="!h-auto !min-h-[2.5rem] !w-11 shrink-0 !rounded-lg !px-0"
+              aria-label="Menu xuất / nhập"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <Card className="min-w-0 flex-1 !rounded-xl !p-2.5 !shadow-sm">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="min-w-0">
+                  <label
+                    htmlFor="schedule-updated-mb"
+                    className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                  >
+                    Updated
+                  </label>
+                  <Input
+                    id="schedule-updated-mb"
+                    value={state.meta.updatedDate}
+                    onChange={(e) =>
+                      setMeta({
+                        updatedDate: e.target.value.trim() || "08APR26",
+                      })
+                    }
+                    placeholder="08APR26"
+                    maxLength={12}
+                    className="!min-h-9 !text-[15px]"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <label
+                    htmlFor="schedule-filter-mb"
+                    className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                  >
+                    {mode === "search" ? "Tìm" : "Lọc"}
+                  </label>
+                  <Input
+                    id="schedule-filter-mb"
+                    ref={mode === "search" ? searchRef : undefined}
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    placeholder="Flt, A/C…"
+                    className="!min-h-9 !text-[15px]"
+                  />
+                </div>
+              </div>
             </Card>
           </div>
 
           <Button
             variant="primary"
-            className="w-full !rounded-xl !bg-gradient-to-r !from-brand-600 !to-violet-600 !text-white hover:!from-brand-700 hover:!to-violet-700 dark:!from-brand-500 dark:!to-violet-600 dark:hover:!from-brand-600 dark:hover:!to-violet-700"
+            className="w-full !min-h-10 !rounded-lg !text-sm !font-semibold !shadow-sm !bg-gradient-to-r !from-brand-600 !to-violet-600 !text-white hover:!from-brand-700 hover:!to-violet-700 dark:!from-brand-500 dark:!to-violet-600 dark:hover:!from-brand-600 dark:hover:!to-violet-700"
             onClick={addRow}
           >
             + Thêm chuyến
           </Button>
         </div>
 
-        <Card className="flex min-h-0 w-full min-w-0 flex-1 flex-col !overflow-hidden !rounded-xl !border-amber-700/30 !p-0 !shadow-none dark:!border-slate-700 lg:!min-h-0 lg:!rounded-2xl lg:!shadow-md lg:!ring-1 lg:!ring-amber-600/25 dark:lg:!ring-amber-900/40">
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-amber-800/30 bg-slate-900 px-3 py-1.5 text-[10px] font-medium text-slate-300 dark:border-slate-800 dark:bg-slate-950 lg:px-4 lg:py-2 lg:text-xs xl:text-sm xl:py-2.5">
+        <Card className="flex min-h-0 w-full min-w-0 flex-1 flex-col !overflow-hidden !rounded-lg !border-amber-700/35 !p-0 !shadow-sm dark:!border-slate-700 sm:!rounded-xl lg:!min-h-0 lg:!rounded-2xl lg:!shadow-md lg:!ring-1 lg:!ring-amber-600/25 dark:lg:!ring-amber-900/40">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-0.5 border-b border-amber-800/30 bg-slate-900 px-2.5 py-1.5 text-[11px] font-medium tabular-nums text-slate-200 dark:border-slate-800 dark:bg-slate-950 lg:px-4 lg:py-2 lg:text-xs xl:text-sm xl:py-2.5">
             <span className="text-amber-400/95">
               {filtered.length} dòng
               {filter.trim() ? " · lọc" : ""}
