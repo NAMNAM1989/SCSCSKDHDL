@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bell, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const titles: Record<string, { title: string; desc?: string }> = {
   "/": { title: "Schedule", desc: "Cut-off SCSC · OPS · EXP" },
@@ -20,6 +20,11 @@ export function AppTopbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { mobileNavOpen, toggleMobileNav } = useDashboardShell();
+  /** Tránh lệch Sun/Moon giữa SSR và client (next-themes chỉ biết theme sau khi mount). */
+  const [themeReady, setThemeReady] = useState(false);
+  useEffect(() => {
+    setThemeReady(true);
+  }, []);
 
   const meta = useMemo(() => {
     const p = pathname.replace(/\/$/, "") || "/";
@@ -99,7 +104,9 @@ export function AppTopbar() {
           aria-label="Chế độ sáng / tối"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
-          {theme === "dark" ? (
+          {!themeReady ? (
+            <Moon className="h-[18px] w-[18px] text-zinc-400" aria-hidden />
+          ) : theme === "dark" ? (
             <Sun className="h-[18px] w-[18px]" />
           ) : (
             <Moon className="h-[18px] w-[18px]" />

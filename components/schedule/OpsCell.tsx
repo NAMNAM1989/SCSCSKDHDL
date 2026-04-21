@@ -10,6 +10,7 @@ export function OpsCell({
   onToggle,
   onText,
   compact,
+  readOnly,
 }: {
   row: ScheduleRow;
   day: OpsKey;
@@ -17,9 +18,55 @@ export function OpsCell({
   onText: (v: string) => void;
   /** Thẻ mobile — nút nhỏ hơn để 7 cột vừa màn */
   compact?: boolean;
+  /** Chỉ hiển thị (bảng desktop khi sửa qua bảng STD) */
+  readOnly?: boolean;
 }) {
   const v = row.ops[day] ?? "";
   const textMode = v && v !== "X" && v !== "x";
+
+  if (readOnly) {
+    if (textMode) {
+      return (
+        <span
+          className={cn(
+            "block max-w-full truncate text-center font-medium text-amber-100/95",
+            compact ? "text-[9px]" : "text-[10px] lg:text-xs xl:text-sm"
+          )}
+          title={v}
+        >
+          {v}
+        </span>
+      );
+    }
+    const on = v === "X" || v === "x";
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center justify-center rounded-md border text-[10px] font-semibold",
+          compact
+            ? "h-7 w-7 min-h-[28px] min-w-[28px]"
+            : "h-9 w-9 lg:h-7 lg:w-7 xl:h-8 xl:w-8",
+          on
+            ? "border-emerald-500/80 bg-emerald-500/25 text-emerald-100"
+            : "border-slate-600/80 bg-slate-800/50 text-slate-500"
+        )}
+      >
+        {on ? (
+          <Check
+            className={cn(
+              "text-emerald-200",
+              compact ? "h-3 w-3" : "h-3.5 w-3.5"
+            )}
+            strokeWidth={3}
+            aria-hidden
+          />
+        ) : (
+          <span className="font-light text-slate-500">—</span>
+        )}
+      </span>
+    );
+  }
+
   if (textMode) {
     return (
       <input

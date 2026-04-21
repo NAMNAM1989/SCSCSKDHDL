@@ -12,18 +12,10 @@ import {
 } from "react";
 import { META_KEY, SAVE_MS, STORAGE_KEY } from "@/lib/schedule/constants";
 import { parseExcelWorkbook } from "@/lib/schedule/excelImport";
-import {
-  emptyOps,
-  migrateRow,
-  newRowId,
-  normalizeRow,
-  recalcCutoffsFromMb,
-  rowHasBaseline,
-  snapshotOrigAndMb,
-} from "@/lib/schedule/rowModel";
+import { applyFieldToRow } from "@/lib/schedule/applyFieldUpdate";
+import { emptyOps, newRowId, normalizeRow } from "@/lib/schedule/rowModel";
 import { clearStorage, loadState, persistNow } from "@/lib/schedule/storage";
 import type { ScheduleMeta, ScheduleRow, ScheduleState } from "@/lib/schedule/types";
-import { isNAVal, minutesBefore, smartFormatTimeCell } from "@/lib/schedule/time";
 import {
   applySyncRuntimeOverride,
   getSyncDocId,
@@ -65,7 +57,8 @@ type Ctx = {
     value: string
   ) => void;
   updateOps: (id: string, day: keyof ScheduleRow["ops"], value: string) => void;
-  addRow: () => void;
+  /** Trả về `id` dòng vừa thêm (để mở form chỉnh sửa). */
+  addRow: () => string | undefined;
   removeRow: (id: string) => void;
   reorder: (fromId: string, toId: string) => void;
   importExcelFile: (file: File) => Promise<void>;
@@ -313,42 +306,9 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       setState((s) => {
         const rows = s.rows.map((row) => {
           if (row.id !== id) return row;
-          const next = { ...row };
-          if (field === "std") {
-            next.std = smartFormatTimeCell(value);
-            const hadB = rowHasBaseline(next);
-            if (!hadB && next.std) snapshotOrigAndMb(next);
-            else if (hadB && next.std) recalcCutoffsFromMb(next);
-          } else if (
-            ["gen", "per", "doc", "transit", "bu"].includes(field as string)
-          ) {
-            const f = field as "gen" | "per" | "doc" | "transit" | "bu";
-            next[f] = smartFormatTimeCell(value);
-            if (next.std && next[f] && !isNAVal(next[f])) {
-              if (!next.mb)
-                next.mb = {
-                  gen: null,
-                  per: null,
-                  doc: null,
-                  transit: null,
-                  bu: null,
-                };
-              next.mb[f] = minutesBefore(next.std, next[f]);
-            } else if (next.mb) {
-              next.mb[f] = null;
-            }
-          } else if (field === "flt") {
-            next.flt = value;
-          } else if (field === "ac") {
-            next.ac = value;
-          } else if (field === "rtg") {
-            next.rtg = value;
-          } else if (field === "remark") {
-            next.remark = value;
-          }
-          migrateRow(next);
-          return next;
+          return applyFieldToRow(row, field, value);
         });
+        if (rows.every((r, i) => r === s.rows[i])) return s;
         const st = { ...s, rows };
         scheduleSave(st);
         return st;
@@ -362,11 +322,13 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       setState((s) => {
         const rows = s.rows.map((row) => {
           if (row.id !== id) return row;
+          if (row.ops[day] === value) return row;
           return {
             ...row,
             ops: { ...row.ops, [day]: value },
           };
         });
+        if (rows.every((r, i) => r === s.rows[i])) return s;
         const st = { ...s, rows };
         scheduleSave(st);
         return st;
@@ -375,27 +337,29 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     [scheduleSave]
   );
 
-  const addRow = useCallback(() => {
+  const addRow = useCallback((): string | undefined => {
+    const id = newRowId();
+    const row = normalizeRow({
+      id,
+      flt: "",
+      ac: "",
+      rtg: "",
+      std: "",
+      gen: "",
+      per: "",
+      doc: "",
+      transit: "",
+      bu: "",
+      ops: emptyOps(),
+      remark: "",
+    });
+    if (!row) return undefined;
     setState((s) => {
-      const row = normalizeRow({
-        id: newRowId(),
-        flt: "",
-        ac: "",
-        rtg: "",
-        std: "",
-        gen: "",
-        per: "",
-        doc: "",
-        transit: "",
-        bu: "",
-        ops: emptyOps(),
-        remark: "",
-      });
-      if (!row) return s;
       const st = { ...s, rows: [...s.rows, row] };
       scheduleSave(st);
       return st;
     });
+    return row.id;
   }, [scheduleSave]);
 
   const removeRow = useCallback(

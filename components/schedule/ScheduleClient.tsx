@@ -20,6 +20,7 @@ import { cn } from "@/lib/cn";
 import { Menu, Printer, Trash2 } from "lucide-react";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { FlightEditSheet } from "./FlightEditSheet";
 import { OpsCell } from "./OpsCell";
 import { ScheduleMobileCards } from "./ScheduleMobileCards";
 
@@ -79,7 +80,26 @@ export function ScheduleClient({
   } = useSchedule();
   const xlsxRef = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sheetRowId, setSheetRowId] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  const sheetRow = sheetRowId
+    ? state.rows.find((r) => r.id === sheetRowId) ?? null
+    : null;
+  const sheetRowIndex = sheetRowId
+    ? state.rows.findIndex((r) => r.id === sheetRowId) + 1
+    : 0;
+
+  useEffect(() => {
+    if (sheetRowId && !state.rows.some((r) => r.id === sheetRowId)) {
+      setSheetRowId(null);
+    }
+  }, [sheetRowId, state.rows]);
+
+  const handleAddFlight = useCallback(() => {
+    const id = addRow();
+    if (id) setSheetRowId(id);
+  }, [addRow]);
 
   useEffect(() => {
     if (mode !== "search") return;
@@ -303,7 +323,7 @@ export function ScheduleClient({
           <Button
             variant="primary"
             className="w-full shrink-0 !min-h-10 !rounded-xl !bg-gradient-to-r !from-brand-600 !to-violet-600 !text-white hover:!from-brand-700 hover:!to-violet-700 sm:w-auto lg:min-w-[160px] lg:!text-sm dark:!from-brand-500 dark:!to-violet-600 dark:hover:!from-brand-600 dark:hover:!to-violet-700"
-            onClick={addRow}
+            onClick={handleAddFlight}
           >
             + Thêm chuyến
           </Button>
@@ -377,8 +397,7 @@ export function ScheduleClient({
           </div>
           <ScheduleMobileCards
             rows={filtered}
-            onUpdateField={updateField}
-            onUpdateOps={updateOps}
+            onOpenRowEdit={(id) => setSheetRowId(id)}
             onRemoveRow={removeRow}
           />
           <div className="scrollbar-thin hidden min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 dark:bg-slate-950 lg:block lg:min-h-[min(70vh,880px)] xl:min-h-[min(75vh,920px)]">
@@ -421,7 +440,7 @@ export function ScheduleClient({
                   <Th
                     mobile="STD"
                     desktop="STD"
-                    title="Scheduled time of departure"
+                    title="STD — nhấn ô trong bảng để mở bảng chỉnh sửa chuyến"
                   />
                   <Th mobile="G" desktop="GEN" title="Gen time" />
                   <Th mobile="P" desktop="PER" title="Performance" />
@@ -483,31 +502,38 @@ export function ScheduleClient({
                     </td>
                     {(["flt", "ac", "rtg"] as const).map((f) => (
                       <td key={f} className="min-w-0 px-0.5 py-0.5">
-                        <input
+                        <div
                           title={String(row[f] ?? "")}
-                          className={cn(
-                            "box-border w-full min-w-0 max-w-full truncate rounded border border-slate-600 bg-slate-800/90 px-1 py-0.5 text-[10px] text-amber-50/95 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm"
-                          )}
-                          value={String(row[f] ?? "")}
-                          onChange={(e) => updateField(row.id, f, e.target.value)}
-                        />
+                          className="box-border w-full min-w-0 max-w-full truncate rounded border border-slate-700/80 bg-slate-800/60 px-1 py-0.5 text-[10px] text-amber-50/95 lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm"
+                        >
+                          {String(row[f] ?? "")}
+                        </div>
                       </td>
                     ))}
-                    {(["std", "gen", "per", "doc", "transit", "bu"] as const).map(
+                    <td className="min-w-0 px-0.5 py-0.5">
+                      <button
+                        type="button"
+                        title="Mở bảng chỉnh sửa chuyến (STD)"
+                        onClick={() => setSheetRowId(row.id)}
+                        className="box-border w-full min-w-0 max-w-full truncate rounded border border-amber-500/55 bg-amber-500/15 px-1 py-0.5 text-center text-[10px] font-semibold tabular-nums text-amber-100 shadow-sm transition hover:border-amber-400/80 hover:bg-amber-500/25 focus:outline-none focus:ring-2 focus:ring-amber-500/40 lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm"
+                      >
+                        {String(row.std ?? "").trim() || "STD"}
+                      </button>
+                    </td>
+                    {(["gen", "per", "doc", "transit", "bu"] as const).map(
                       (f) => (
                         <td key={f} className="min-w-0 px-0.5 py-0.5">
-                          <input
-                            key={`${row.id}-${f}-${row[f]}`}
+                          <div
                             title={String(row[f] ?? "")}
                             className={cn(
-                              "box-border w-full min-w-0 max-w-full truncate rounded border px-1 py-0.5 text-[10px] focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm",
+                              "box-border w-full min-w-0 max-w-full truncate rounded border px-1 py-0.5 text-[10px] lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm",
                               fieldDiffersOrig(row, f)
                                 ? "border-red-500 bg-red-950/50 text-red-200"
-                                : "border-slate-600 bg-slate-800/90 text-amber-50/95"
+                                : "border-slate-700/80 bg-slate-800/60 text-amber-50/95"
                             )}
-                            defaultValue={String(row[f] ?? "")}
-                            onBlur={(e) => updateField(row.id, f, e.target.value)}
-                          />
+                          >
+                            {String(row[f] ?? "")}
+                          </div>
                         </td>
                       )
                     )}
@@ -519,25 +545,19 @@ export function ScheduleClient({
                         <OpsCell
                           row={row}
                           day={d}
-                          onToggle={() => {
-                            const cur = row.ops[d] || "";
-                            updateOps(
-                              row.id,
-                              d,
-                              cur === "X" || cur === "x" ? "" : "X"
-                            );
-                          }}
-                          onText={(val) => updateOps(row.id, d, val)}
+                          readOnly
+                          onToggle={() => {}}
+                          onText={() => {}}
                         />
                       </td>
                     ))}
                     <td className="min-w-0 px-0.5 py-0.5">
-                      <input
+                      <div
                         title={row.remark}
-                        className="box-border w-full min-w-0 max-w-full truncate rounded border border-slate-600 bg-slate-800/90 px-1 py-0.5 text-[10px] text-amber-50/90 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/25 lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm"
-                        value={row.remark}
-                        onChange={(e) => updateField(row.id, "remark", e.target.value)}
-                      />
+                        className="box-border w-full min-w-0 max-w-full truncate rounded border border-slate-700/80 bg-slate-800/60 px-1 py-0.5 text-[10px] text-amber-50/90 lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm"
+                      >
+                        {row.remark}
+                      </div>
                     </td>
                     <td className="min-w-0 px-0 py-0.5 text-center">
                       <Button
@@ -573,12 +593,22 @@ export function ScheduleClient({
           <Button
             variant="primary"
             className="w-full !min-h-10 !rounded-lg !text-sm !font-semibold !shadow-sm !bg-gradient-to-r !from-brand-600 !to-violet-600 !text-white hover:!from-brand-700 hover:!to-violet-700 dark:!from-brand-500 dark:!to-violet-600 dark:hover:!from-brand-600 dark:hover:!to-violet-700"
-            onClick={addRow}
+            onClick={handleAddFlight}
           >
             + Thêm chuyến
           </Button>
         </div>
       </div>
+
+      <FlightEditSheet
+        open={Boolean(sheetRowId && sheetRow)}
+        onClose={() => setSheetRowId(null)}
+        row={sheetRow}
+        rowIndex={sheetRowIndex}
+        onUpdateField={updateField}
+        onUpdateOps={updateOps}
+        onRemoveRow={removeRow}
+      />
     </div>
   );
 }
