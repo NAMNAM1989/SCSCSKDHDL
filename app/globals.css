@@ -5,6 +5,7 @@
 :root {
   --surface: 255 255 255;
   --surface-muted: 248 250 252;
+  --font-sans: "Segoe UI", "Inter", "Helvetica Neue", Arial, system-ui, -apple-system, sans-serif;
 }
 
 .dark {
