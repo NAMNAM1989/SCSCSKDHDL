@@ -11,6 +11,7 @@ export function OpsCell({
   onText,
   compact,
   readOnly,
+  dense,
 }: {
   row: ScheduleRow;
   day: OpsKey;
@@ -20,6 +21,8 @@ export function OpsCell({
   compact?: boolean;
   /** Chỉ hiển thị (bảng desktop khi sửa qua bảng STD) */
   readOnly?: boolean;
+  /** Thẻ mobile card — ô 24px, T2–CN sát nhau hơn */
+  dense?: boolean;
 }) {
   const v = row.ops[day] ?? "";
   const textMode = v && v !== "X" && v !== "x";
@@ -30,7 +33,7 @@ export function OpsCell({
         <span
           className={cn(
             "block max-w-full truncate text-center font-medium text-amber-100/95",
-            compact ? "text-[9px]" : "text-[10px] lg:text-xs xl:text-sm"
+            dense ? "text-[8px] leading-tight" : compact ? "text-[9px]" : "text-[10px] lg:text-xs xl:text-sm"
           )}
           title={v}
         >
@@ -42,8 +45,10 @@ export function OpsCell({
     return (
       <span
         className={cn(
-          "inline-flex items-center justify-center rounded-md border text-[10px] font-semibold",
-          compact
+          "inline-flex items-center justify-center rounded border text-[10px] font-semibold",
+          compact && dense
+            ? "h-6 w-6 min-h-[24px] min-w-[24px] rounded-sm text-[9px]"
+            : compact
             ? "h-7 w-7 min-h-[28px] min-w-[28px]"
             : "h-9 w-9 lg:h-7 lg:w-7 xl:h-8 xl:w-8",
           on
@@ -55,7 +60,7 @@ export function OpsCell({
           <Check
             className={cn(
               "text-emerald-200",
-              compact ? "h-3 w-3" : "h-3.5 w-3.5"
+              compact && dense ? "h-2.5 w-2.5" : compact ? "h-3 w-3" : "h-3.5 w-3.5"
             )}
             strokeWidth={3}
             aria-hidden
