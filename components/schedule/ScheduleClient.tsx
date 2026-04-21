@@ -15,7 +15,7 @@ import {
   fieldDiffersOrig,
   rowMatchesFilter,
 } from "@/lib/schedule/rowModel";
-import { buildPrintHtml } from "@/lib/schedule/print";
+import { buildPrintDocument } from "@/lib/schedule/print";
 import { cn } from "@/lib/cn";
 import { Menu, Printer, Trash2 } from "lucide-react";
 import type { DragEvent } from "react";
@@ -78,7 +78,6 @@ export function ScheduleClient({
     clearDraft,
   } = useSchedule();
   const xlsxRef = useRef<HTMLInputElement>(null);
-  const printRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -92,18 +91,53 @@ export function ScheduleClient({
   }, [mode]);
 
   const handlePrint = useCallback(() => {
-    if (printRef.current) {
-      printRef.current.innerHTML = buildPrintHtml(state);
-    }
-    window.print();
-  }, [state]);
+    const frame = document.createElement("iframe");
+    frame.setAttribute("aria-hidden", "true");
+    frame.style.position = "fixed";
+    frame.style.right = "0";
+    frame.style.bottom = "0";
+    frame.style.width = "0";
+    frame.style.height = "0";
+    frame.style.border = "0";
+    frame.style.opacity = "0";
+    frame.style.pointerEvents = "none";
+    document.body.appendChild(frame);
 
-  useEffect(() => {
-    const fn = () => {
-      if (printRef.current) printRef.current.innerHTML = buildPrintHtml(state);
+    const cleanup = () => {
+      try {
+        if (document.body.contains(frame)) document.body.removeChild(frame);
+      } catch {
+        /* ignore */
+      }
     };
-    window.addEventListener("beforeprint", fn);
-    return () => window.removeEventListener("beforeprint", fn);
+
+    const win = frame.contentWindow;
+    if (!win) {
+      cleanup();
+      alert("Không thể khởi tạo vùng in PDF.");
+      return;
+    }
+
+    const doc = win.document;
+    doc.open();
+    doc.write(buildPrintDocument(state));
+    doc.close();
+
+    const afterPrint = () => {
+      win.removeEventListener("afterprint", afterPrint);
+      cleanup();
+    };
+    win.addEventListener("afterprint", afterPrint);
+
+    setTimeout(() => {
+      try {
+        win.focus();
+        win.print();
+      } catch {
+        cleanup();
+        alert("Không mở được hộp thoại in. Vui lòng thử lại.");
+      }
+    }, 180);
   }, [state]);
 
   const filtered = state.rows.filter((r) =>
@@ -133,8 +167,6 @@ export function ScheduleClient({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden lg:min-h-0 lg:flex-1 lg:overflow-hidden">
-      <div ref={printRef} className="hidden print:block" aria-hidden />
-
       {/* Mobile: menu gập dạng panel nổi phía trên thanh đáy */}
       {menuOpen ? (
         <div className="fixed inset-x-2 bottom-[4.5rem] z-40 rounded-xl border border-zinc-200/90 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900/95 lg:hidden">

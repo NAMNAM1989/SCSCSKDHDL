@@ -141,3 +141,35 @@ export function buildPrintHtml(state: ScheduleState): string {
     "</table></div>"
   );
 }
+
+export function buildPrintDocument(state: ScheduleState): string {
+  return (
+    "<!doctype html>" +
+    '<html lang="vi"><head><meta charset="utf-8"/>' +
+    "<title>SCSC Print</title>" +
+    "<style>" +
+    "@page{size:A4 landscape;margin:1cm;}" +
+    "html,body{margin:0;padding:0;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;}" +
+    ".print-root{padding:0;}" +
+    ".pdf-banner{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.35rem;padding-bottom:.25rem;border-bottom:2px solid #000;}" +
+    ".pdf-banner__left{font-weight:700;font-size:11pt;color:#000;}" +
+    ".pdf-banner__center{flex:1;text-align:center;min-width:0;}" +
+    ".pdf-banner__title{font-size:16pt;font-weight:700;color:#c00000;margin:0;line-height:1.15;}" +
+    ".pdf-banner__updated{margin-top:.15rem;font-size:11pt;font-weight:700;color:#00b050;text-decoration:underline;}" +
+    ".pdf-banner__right{font-size:10pt;font-weight:700;color:#000;white-space:nowrap;}" +
+    ".pdf-table-wrap{margin-top:.2rem;overflow:visible;}" +
+    "table.pdf-table{width:100%;border-collapse:collapse;font-size:10pt;table-layout:fixed;}" +
+    "table.pdf-table th,table.pdf-table td{border:1px solid #000;padding:.12rem .18rem;text-align:center;vertical-align:middle;word-wrap:break-word;}" +
+    "table.pdf-table thead th{background:#ff0;color:#000;font-weight:700;font-size:11pt;}" +
+    "table.pdf-table thead th.sun-col,table.pdf-table tbody td.sun-col{background:#fce4e4;}" +
+    "table.pdf-table tbody td{font-size:10pt;background:#fff;}" +
+    "table.pdf-table tbody tr:nth-child(even) td:not(.sun-col){background:#fff;}" +
+    "table.pdf-table td.remark-col{text-align:left;font-size:9pt;white-space:normal;}" +
+    ".pdf-na{color:#e06666;font-style:italic;}" +
+    "@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}" +
+    "</style></head><body>" +
+    '<main class="print-root">' +
+    buildPrintHtml(state) +
+    "</main></body></html>"
+  );
+}
