@@ -405,22 +405,23 @@ export function ScheduleClient({
               <colgroup>
                 <col className="w-9 xl:w-10" />
                 <col className="w-10 xl:w-11" />
-                <col className="w-[9%] xl:w-[9%]" />
-                <col className="w-[7%]" />
-                <col className="w-[12%] xl:w-[13%]" />
+                <col className="w-[8%]" />
                 <col className="w-[6%]" />
                 <col className="w-[6%]" />
                 <col className="w-[5%]" />
                 <col className="w-[5%]" />
                 <col className="w-[5%]" />
                 <col className="w-[5%]" />
-                <col className="w-[4.5%]" />
-                <col className="w-[4.5%]" />
-                <col className="w-[4.5%]" />
-                <col className="w-[4.5%]" />
-                <col className="w-[4.5%]" />
-                <col className="w-[4.5%]" />
-                <col className="w-[19%] xl:w-[20%]" />
+                <col className="w-[5%]" />
+                <col className="w-[5%]" />
+                <col className="w-[3%] min-w-[1.85rem]" />
+                <col className="w-[3%] min-w-[1.85rem]" />
+                <col className="w-[3%] min-w-[1.85rem]" />
+                <col className="w-[3%] min-w-[1.85rem]" />
+                <col className="w-[3%] min-w-[1.85rem]" />
+                <col className="w-[3%] min-w-[1.85rem]" />
+                <col className="w-[3%] min-w-[1.85rem]" />
+                <col className="min-w-0 w-[29%] xl:w-[30%]" />
                 <col className="w-11 xl:w-12" />
               </colgroup>
               <thead>
@@ -545,6 +546,7 @@ export function ScheduleClient({
                         <OpsCell
                           row={row}
                           day={d}
+                          compact
                           readOnly
                           onToggle={() => {}}
                           onText={() => {}}
