@@ -1,3 +1,4 @@
+import { printTextColorForSeason } from "./season";
 import { isNAVal } from "./time";
 import type { ScheduleState } from "./types";
 
@@ -109,7 +110,7 @@ export function buildPrintHtml(state: ScheduleState): string {
 
   let body = "<tbody>";
   for (const r of state.rows) {
-    const col = escapeAttr(rowColorForFlight(r.flt));
+    const col = escapeAttr(printTextColorForSeason(r));
     body += '<tr style="color:' + col + '">';
     body += "<td>" + cellPrintHtml(r.flt) + "</td>";
     body += "<td>" + cellPrintHtml(r.ac) + "</td>";

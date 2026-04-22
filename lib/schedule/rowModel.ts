@@ -1,4 +1,5 @@
 import { OPS_KEYS } from "./constants";
+import { normalizeSeason } from "./season";
 import type { MbMap, OpsMap, OrigSnapshot, ScheduleRow } from "./types";
 import { applyBefore, isNAVal, minutesBefore } from "./time";
 
@@ -54,6 +55,7 @@ export function normalizeRow(r: unknown): ScheduleRow | null {
   const x = r as Record<string, unknown>;
   return {
     id: typeof x.id === "string" && x.id ? x.id : newRowId(),
+    season: normalizeSeason(x.season),
     flt: x.flt != null ? String(x.flt) : "",
     ac: x.ac != null ? String(x.ac) : "",
     rtg: x.rtg != null ? String(x.rtg) : "",

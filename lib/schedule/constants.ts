@@ -40,6 +40,7 @@ export const TIME_FIELDS = ["std", "gen", "per", "doc", "transit", "bu"] as cons
 
 export const SEED_ROWS: Omit<ScheduleRow, "id" | "orig" | "mb">[] = [
   {
+    season: "summer",
     flt: "VJ811",
     ac: "A321",
     rtg: "SGN-SIN",
@@ -61,6 +62,7 @@ export const SEED_ROWS: Omit<ScheduleRow, "id" | "orig" | "mb">[] = [
     remark: "",
   },
   {
+    season: "winter",
     flt: "CV7856",
     ac: "B747F",
     rtg: "SGN-LUX",
@@ -74,6 +76,7 @@ export const SEED_ROWS: Omit<ScheduleRow, "id" | "orig" | "mb">[] = [
     remark: "",
   },
   {
+    season: "summer",
     flt: "TG551",
     ac: "A320",
     rtg: "SGN-BKK",

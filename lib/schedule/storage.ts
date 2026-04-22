@@ -1,12 +1,13 @@
 import { META_KEY, SEED_ROWS, STORAGE_KEY } from "./constants";
-import { migrateRow, newRowId, normalizeRow } from "./rowModel";
+import { migrateRow, normalizeRow } from "./rowModel";
 import type { ScheduleMeta, ScheduleRow, ScheduleState } from "./types";
 
-export function loadState(): ScheduleState {
+function seedRowId(index: number): string {
+  return `r-seed-${index}`;
+}
+
+function buildStateFromStorage(raw: string | null, metaRaw: string | null): ScheduleState {
   try {
-    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    const metaRaw =
-      typeof localStorage !== "undefined" ? localStorage.getItem(META_KEY) : null;
     let rows: ScheduleRow[] = [];
     if (raw) {
       const arr = JSON.parse(raw) as unknown;
@@ -18,10 +19,12 @@ export function loadState(): ScheduleState {
       }
     }
     if (!rows.length) {
+      let i = 0;
       for (const s of SEED_ROWS) {
-        const b = normalizeRow({ ...s });
+        const b = normalizeRow({ ...s, id: seedRowId(i) });
         if (b) {
-          b.id = newRowId();
+          b.id = seedRowId(i);
+          i += 1;
           rows.push(b);
         }
       }
@@ -36,10 +39,10 @@ export function loadState(): ScheduleState {
     }
     return { rows, meta };
   } catch {
-    const fallback = SEED_ROWS.map((x) => {
-      const n = normalizeRow({ ...x });
+    const fallback = SEED_ROWS.map((x, i) => {
+      const n = normalizeRow({ ...x, id: seedRowId(i) });
       if (!n) throw new Error("seed");
-      n.id = newRowId();
+      n.id = seedRowId(i);
       return n;
     });
     for (const row of fallback) {
@@ -47,6 +50,20 @@ export function loadState(): ScheduleState {
     }
     return { rows: fallback, meta: { updatedDate: "08APR26" } };
   }
+}
+
+/**
+ * Cùng nội dung với `loadState()` khi chưa có bản lưu (3 dòng mẫu, id seed cố định).
+ * Dùng cho SSR + lượt render hydrate đầu — tránh 3/60 dòng và tránh newRowId() ngẫu nhiên.
+ */
+export function getHydrationInitialState(): ScheduleState {
+  return buildStateFromStorage(null, null);
+}
+
+export function loadState(): ScheduleState {
+  const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
+  const metaRaw = typeof localStorage !== "undefined" ? localStorage.getItem(META_KEY) : null;
+  return buildStateFromStorage(raw, metaRaw);
 }
 
 export function persistNow(state: ScheduleState): void {

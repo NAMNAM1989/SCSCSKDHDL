@@ -1,4 +1,4 @@
-import type { ScheduleRow } from "./types";
+import type { ScheduleRow, ScheduleSeason } from "./types";
 import { isNAVal, minutesBefore, smartFormatTimeCell } from "./time";
 import {
   migrateRow,
@@ -79,6 +79,14 @@ export function applyFieldToRow(
   if (field === "remark") {
     if (value === row.remark) return row;
     const next = { ...row, remark: value };
+    migrateRow(next);
+    return next;
+  }
+
+  if (field === "season") {
+    const s: ScheduleSeason = value === "winter" ? "winter" : "summer";
+    if (s === row.season) return row;
+    const next: ScheduleRow = { ...row, season: s };
     migrateRow(next);
     return next;
   }

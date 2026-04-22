@@ -27,12 +27,21 @@ export function OpsCell({
   const v = row.ops[day] ?? "";
   const textMode = v && v !== "X" && v !== "x";
 
+  const winter = row.season === "winter";
+  const seasonText = winter
+    ? "text-sky-100/95"
+    : "text-red-100/95";
+  const seasonOffBox = winter
+    ? "border-sky-500/45 bg-sky-950/40 text-sky-400/90"
+    : "border-red-500/45 bg-red-950/40 text-red-300/80";
+
   if (readOnly) {
     if (textMode) {
       return (
         <span
           className={cn(
-            "block max-w-full truncate text-center font-medium text-amber-100/95",
+            "block max-w-full truncate text-center font-medium",
+            seasonText,
             dense ? "text-[8px] leading-tight" : compact ? "text-[9px]" : "text-[10px] lg:text-xs xl:text-sm"
           )}
           title={v}
@@ -53,7 +62,7 @@ export function OpsCell({
             : "h-9 w-9 lg:h-7 lg:w-7 xl:h-8 xl:w-8",
           on
             ? "border-emerald-500/80 bg-emerald-500/25 text-emerald-100"
-            : "border-slate-600/80 bg-slate-800/50 text-slate-500"
+            : seasonOffBox
         )}
       >
         {on ? (
@@ -66,7 +75,14 @@ export function OpsCell({
             aria-hidden
           />
         ) : (
-          <span className="font-light text-slate-500">—</span>
+          <span
+            className={cn(
+              "font-light",
+              winter ? "text-sky-500/80" : "text-red-400/75"
+            )}
+          >
+            —
+          </span>
         )}
       </span>
     );

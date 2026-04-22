@@ -4,61 +4,16 @@ import { useSchedule } from "@/components/providers/ScheduleProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import {
-  OPS_DAY_HEADER_EN,
-  OPS_DAY_LABELS,
-  OPS_KEYS,
-} from "@/lib/schedule/constants";
 import { appRowToFlight, formatUpdatedDateForExport } from "@/lib/schedule/exportHelpers";
 import { exportFlightSchedule } from "@/lib/exportFlightSchedule";
-import {
-  fieldDiffersOrig,
-  rowMatchesFilter,
-} from "@/lib/schedule/rowModel";
+import { rowMatchesFilter } from "@/lib/schedule/rowModel";
 import { buildPrintDocument } from "@/lib/schedule/print";
-import { cn } from "@/lib/cn";
 import { Menu, Printer, Trash2 } from "lucide-react";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AirlineOpsFlightTable } from "./airline/AirlineOpsFlightTable";
 import { FlightEditSheet } from "./FlightEditSheet";
-import { OpsCell } from "./OpsCell";
 import { ScheduleMobileCards } from "./ScheduleMobileCards";
-
-/** Header kiểu bảng cut-off — xl/2xl: chữ lớn để đọc trên màn rộng */
-const thCutoff =
-  "border-b border-amber-800/85 bg-amber-400 px-0.5 py-1 align-bottom text-[8px] font-bold uppercase leading-tight tracking-tight text-slate-900 shadow-sm dark:border-amber-700 dark:bg-amber-600 dark:text-amber-950 lg:px-2 lg:py-2 lg:text-[11px] lg:leading-tight xl:px-2.5 xl:py-2.5 xl:text-xs xl:leading-snug 2xl:text-[13px]";
-
-function Th({
-  mobile,
-  desktop,
-  align = "left",
-  className,
-  title: titleAttr,
-}: {
-  mobile: string;
-  desktop: string;
-  align?: "left" | "center";
-  className?: string;
-  title?: string;
-}) {
-  const t =
-    titleAttr ??
-    (mobile === desktop ? desktop : `${desktop} — ${mobile}`);
-  return (
-    <th
-      title={t}
-      scope="col"
-      className={cn(
-        thCutoff,
-        align === "center" && "text-center",
-        className
-      )}
-    >
-      <span className="lg:hidden">{mobile}</span>
-      <span className="hidden lg:inline">{desktop}</span>
-    </th>
-  );
-}
 
 export function ScheduleClient({
   mode = "home",
@@ -81,6 +36,7 @@ export function ScheduleClient({
   const xlsxRef = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [sheetRowId, setSheetRowId] = useState<string | null>(null);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const sheetRow = sheetRowId
@@ -95,6 +51,12 @@ export function ScheduleClient({
       setSheetRowId(null);
     }
   }, [sheetRowId, state.rows]);
+
+  useEffect(() => {
+    if (selectedRowId && !state.rows.some((r) => r.id === selectedRowId)) {
+      setSelectedRowId(null);
+    }
+  }, [selectedRowId, state.rows]);
 
   const handleAddFlight = useCallback(() => {
     const id = addRow();
@@ -385,9 +347,9 @@ export function ScheduleClient({
 
         </div>
 
-        <Card className="flex min-h-0 w-full min-w-0 flex-1 flex-col !overflow-hidden !rounded-lg !border-amber-700/35 !p-0 !shadow-sm dark:!border-slate-700 sm:!rounded-xl lg:!min-h-0 lg:!rounded-2xl lg:!shadow-md lg:!ring-1 lg:!ring-amber-600/25 dark:lg:!ring-amber-900/40">
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-0.5 border-b border-amber-800/30 bg-slate-900 px-2.5 py-1.5 text-[11px] font-medium tabular-nums text-slate-200 dark:border-slate-800 dark:bg-slate-950 lg:px-4 lg:py-2 lg:text-xs xl:text-sm xl:py-2.5">
-            <span className="text-amber-400/95">
+        <Card className="flex min-h-0 w-full min-w-0 flex-1 flex-col !overflow-hidden !rounded-lg !border !border-slate-800/80 !p-0 !shadow-sm dark:!bg-[#0b1120] sm:!rounded-xl lg:!min-h-0 lg:!rounded-2xl">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-0.5 border-b border-slate-800/80 bg-slate-950/90 px-2.5 py-1.5 text-sm font-medium tabular-nums text-slate-400 lg:px-4 lg:py-2.5 lg:text-sm xl:py-3">
+            <span className="text-slate-300/90">
               {filtered.length} dòng
               {filter.trim() ? " · lọc" : ""}
             </span>
@@ -400,182 +362,17 @@ export function ScheduleClient({
             onOpenRowEdit={(id) => setSheetRowId(id)}
             onRemoveRow={removeRow}
           />
-          <div className="scrollbar-thin hidden min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 dark:bg-slate-950 lg:block lg:min-h-[min(70vh,880px)] xl:min-h-[min(75vh,920px)]">
-            <table className="w-full min-w-0 table-fixed border-separate border-spacing-0 text-left text-[10px] text-slate-100 lg:text-xs xl:text-sm">
-              <colgroup>
-                <col className="w-9 xl:w-10" />
-                <col className="w-10 xl:w-11" />
-                <col className="w-[8%]" />
-                <col className="w-[6%]" />
-                <col className="w-[6%]" />
-                <col className="w-[5%]" />
-                <col className="w-[5%]" />
-                <col className="w-[5%]" />
-                <col className="w-[5%]" />
-                <col className="w-[5%]" />
-                <col className="w-[5%]" />
-                <col className="w-[3%] min-w-[1.85rem]" />
-                <col className="w-[3%] min-w-[1.85rem]" />
-                <col className="w-[3%] min-w-[1.85rem]" />
-                <col className="w-[3%] min-w-[1.85rem]" />
-                <col className="w-[3%] min-w-[1.85rem]" />
-                <col className="w-[3%] min-w-[1.85rem]" />
-                <col className="w-[3%] min-w-[1.85rem]" />
-                <col className="min-w-0 w-[29%] xl:w-[30%]" />
-                <col className="w-11 xl:w-12" />
-              </colgroup>
-              <thead>
-                <tr className="sticky top-0 z-10">
-                  <th
-                    className={cn(thCutoff, "w-6 px-0")}
-                    title="Giữ & kéo dòng để đổi thứ tự"
-                  />
-                  <Th mobile="#" desktop="#" title="Số thứ tự" />
-                  <Th
-                    mobile="Flt"
-                    desktop="FLT"
-                    title="Số hiệu chuyến bay (Flight)"
-                  />
-                  <Th mobile="A/C" desktop="A/C" title="Loại tàu bay (Aircraft)" />
-                  <Th mobile="RTG" desktop="RTG" title="Routing / tuyến bay" />
-                  <Th
-                    mobile="STD"
-                    desktop="STD"
-                    title="STD — nhấn ô trong bảng để mở bảng chỉnh sửa chuyến"
-                  />
-                  <Th mobile="G" desktop="GEN" title="Gen time" />
-                  <Th mobile="P" desktop="PER" title="Performance" />
-                  <Th mobile="D" desktop="DOC" title="Documentation" />
-                  <Th mobile="Tr" desktop="TRS" title="Transit" />
-                  <Th mobile="B/U" desktop="R/U" title="Block / Uplift" />
-                  {OPS_KEYS.map((d) => (
-                    <th
-                      key={d}
-                      title={`OPS — ${OPS_DAY_LABELS[d]} (${d})`}
-                      scope="col"
-                      className={cn(
-                        thCutoff,
-                        "text-center text-[7px] lg:text-[10px] xl:text-xs"
-                      )}
-                    >
-                      <span className="lg:hidden">{OPS_DAY_LABELS[d]}</span>
-                      <span className="hidden lg:inline">
-                        {OPS_DAY_HEADER_EN[d]}
-                      </span>
-                    </th>
-                  ))}
-                  <Th
-                    mobile="Rm"
-                    desktop="REMARK"
-                    title="Remark / ghi chú"
-                  />
-                  <th
-                    className={cn(thCutoff, "w-8 px-0")}
-                    title="Xoá dòng"
-                  />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((row, idx) => (
-                  <tr
-                    key={row.id}
-                    draggable
-                    onDragStart={(e) =>
-                      onDragStart(
-                        e as unknown as DragEvent<HTMLTableRowElement>,
-                        row.id
-                      )
-                    }
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) =>
-                      onDrop(
-                        e as unknown as DragEvent<HTMLTableRowElement>,
-                        row.id
-                      )
-                    }
-                    className="border-b border-slate-700/90 odd:bg-slate-900 even:bg-slate-950 hover:bg-slate-800/80 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950 dark:hover:bg-slate-800"
-                  >
-                    <td className="cursor-grab px-0.5 text-center text-slate-500" title="Kéo">
-                      ⠿
-                    </td>
-                    <td className="min-w-0 px-0.5 text-center text-[10px] tabular-nums text-amber-100/90 lg:text-xs xl:text-sm">
-                      {idx + 1}
-                    </td>
-                    {(["flt", "ac", "rtg"] as const).map((f) => (
-                      <td key={f} className="min-w-0 px-0.5 py-0.5">
-                        <div
-                          title={String(row[f] ?? "")}
-                          className="box-border w-full min-w-0 max-w-full truncate rounded border border-slate-700/80 bg-slate-800/60 px-1 py-0.5 text-[10px] text-amber-50/95 lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm"
-                        >
-                          {String(row[f] ?? "")}
-                        </div>
-                      </td>
-                    ))}
-                    <td className="min-w-0 px-0.5 py-0.5">
-                      <button
-                        type="button"
-                        title="Mở bảng chỉnh sửa chuyến (STD)"
-                        onClick={() => setSheetRowId(row.id)}
-                        className="box-border w-full min-w-0 max-w-full truncate rounded border border-amber-500/55 bg-amber-500/15 px-1 py-0.5 text-center text-[10px] font-semibold tabular-nums text-amber-100 shadow-sm transition hover:border-amber-400/80 hover:bg-amber-500/25 focus:outline-none focus:ring-2 focus:ring-amber-500/40 lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm"
-                      >
-                        {String(row.std ?? "").trim() || "STD"}
-                      </button>
-                    </td>
-                    {(["gen", "per", "doc", "transit", "bu"] as const).map(
-                      (f) => (
-                        <td key={f} className="min-w-0 px-0.5 py-0.5">
-                          <div
-                            title={String(row[f] ?? "")}
-                            className={cn(
-                              "box-border w-full min-w-0 max-w-full truncate rounded border px-1 py-0.5 text-[10px] lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm",
-                              fieldDiffersOrig(row, f)
-                                ? "border-red-500 bg-red-950/50 text-red-200"
-                                : "border-slate-700/80 bg-slate-800/60 text-amber-50/95"
-                            )}
-                          >
-                            {String(row[f] ?? "")}
-                          </div>
-                        </td>
-                      )
-                    )}
-                    {OPS_KEYS.map((d) => (
-                        <td
-                          key={d}
-                          className="min-w-0 bg-slate-900/50 px-0 py-0.5 text-center align-middle"
-                        >
-                        <OpsCell
-                          row={row}
-                          day={d}
-                          compact
-                          readOnly
-                          onToggle={() => {}}
-                          onText={() => {}}
-                        />
-                      </td>
-                    ))}
-                    <td className="min-w-0 px-0.5 py-0.5">
-                      <div
-                        title={row.remark}
-                        className="box-border w-full min-w-0 max-w-full truncate rounded border border-slate-700/80 bg-slate-800/60 px-1 py-0.5 text-[10px] text-amber-50/90 lg:px-1.5 lg:py-1 lg:text-xs xl:px-2 xl:py-1.5 xl:text-sm"
-                      >
-                        {row.remark}
-                      </div>
-                    </td>
-                    <td className="min-w-0 px-0 py-0.5 text-center">
-                      <Button
-                        variant="ghost"
-                        className="!min-h-7 !min-w-7 !px-0 text-slate-500 hover:text-red-400"
-                        onClick={() => {
-                          if (confirm("Xoá dòng?")) removeRow(row.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="hidden min-h-0 min-w-0 flex-1 flex-col bg-[#0B1E2D] lg:flex lg:min-h-[min(70vh,880px)] xl:min-h-[min(75vh,920px)]">
+            <AirlineOpsFlightTable
+              rows={filtered}
+              selectedRowId={selectedRowId}
+              onSelectRow={setSelectedRowId}
+              onOpenEdit={setSheetRowId}
+              onRemoveRow={removeRow}
+              onSeasonChange={(id, season) => updateField(id, "season", season)}
+              onDragStart={(e, id) => onDragStart(e, id)}
+              onDrop={(e, toId) => onDrop(e, toId)}
+            />
           </div>
         </Card>
       </main>

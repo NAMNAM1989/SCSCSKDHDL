@@ -4,6 +4,15 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { OPS_DAY_LABELS, OPS_KEYS } from "@/lib/schedule/constants";
 import { fieldDiffersOrig } from "@/lib/schedule/rowModel";
+import {
+  mobileCardSeasonClass,
+  mobileCardShellClass,
+  mobileMetaChipClass,
+  mobileOpsPanelClass,
+  mobileRemarkButtonClass,
+  mobileStdButtonClass,
+  mobileSttBadgeClass,
+} from "@/lib/schedule/season";
 import type { ScheduleRow } from "@/lib/schedule/types";
 import { cn } from "@/lib/cn";
 import { Clock, Trash2 } from "lucide-react";
@@ -56,11 +65,20 @@ export function ScheduleMobileCards({
         return (
           <Card
             key={row.id}
-            className="overflow-hidden border border-zinc-200/80 bg-white p-0 shadow-sm dark:border-zinc-700/80 dark:bg-zinc-900"
+            className={cn(
+              "overflow-hidden border border-zinc-200/80 p-0 shadow-sm dark:border-zinc-700/80",
+              mobileCardShellClass(row),
+              mobileCardSeasonClass(row)
+            )}
           >
             <div className="flex flex-col gap-2 px-2.5 py-2.5">
               <div className="flex items-start gap-2">
-                <span className="mt-0.5 shrink-0 rounded-md bg-brand-600/10 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-brand-800 dark:bg-brand-500/15 dark:text-brand-200">
+                <span
+                  className={cn(
+                    "mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-bold tabular-nums",
+                    mobileSttBadgeClass(row)
+                  )}
+                >
                   #{idx + 1}
                 </span>
                 <div className="min-w-0 flex-1 space-y-1">
@@ -69,12 +87,22 @@ export function ScheduleMobileCards({
                   </p>
                   <div className="flex flex-wrap gap-1 text-[11px] text-zinc-600 dark:text-zinc-400">
                     {row.ac ? (
-                      <span className="rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-800">
+                      <span
+                        className={cn(
+                          "rounded px-1.5 py-0.5",
+                          mobileMetaChipClass(row)
+                        )}
+                      >
                         {row.ac}
                       </span>
                     ) : null}
                     {row.rtg ? (
-                      <span className="rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-800">
+                      <span
+                        className={cn(
+                          "rounded px-1.5 py-0.5",
+                          mobileMetaChipClass(row)
+                        )}
+                      >
                         {row.rtg}
                       </span>
                     ) : null}
@@ -96,12 +124,27 @@ export function ScheduleMobileCards({
                 type="button"
                 onClick={() => onOpenRowEdit(row.id)}
                 className={cn(
-                  "flex w-full items-center justify-center gap-2 rounded-xl border-2 border-brand-500/45 bg-gradient-to-br from-brand-500/12 to-violet-500/10 px-3 py-2.5 text-left shadow-sm transition hover:border-brand-500/70 hover:from-brand-500/18 hover:to-violet-500/15 active:scale-[0.99] dark:border-brand-500/40 dark:from-brand-500/15 dark:to-violet-950/30"
+                  "flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-left active:scale-[0.99]",
+                  mobileStdButtonClass(row)
                 )}
               >
-                <Clock className="h-5 w-5 shrink-0 text-brand-600 dark:text-brand-300" />
+                <Clock
+                  className={cn(
+                    "h-5 w-5 shrink-0",
+                    row.season === "winter"
+                      ? "text-sky-600 dark:text-sky-300"
+                      : "text-red-600 dark:text-red-300"
+                  )}
+                />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-800/90 dark:text-brand-200/95">
+                  <p
+                    className={cn(
+                      "text-[10px] font-semibold uppercase tracking-wide",
+                      row.season === "winter"
+                        ? "text-sky-900/90 dark:text-sky-200/95"
+                        : "text-red-900/90 dark:text-red-200/95"
+                    )}
+                  >
                     STD — chạm để sửa chuyến
                   </p>
                   <p className="truncate text-lg font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
@@ -128,8 +171,20 @@ export function ScheduleMobileCards({
                 </div>
               ) : null}
 
-              <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/80 px-1.5 py-1 dark:border-zinc-700/80 dark:bg-zinc-950/40">
-                <p className="mb-0.5 px-0.5 text-[8px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              <div
+                className={cn(
+                  "rounded-lg border px-1.5 py-1",
+                  mobileOpsPanelClass(row)
+                )}
+              >
+                <p
+                  className={cn(
+                    "mb-0.5 px-0.5 text-[8px] font-semibold uppercase tracking-wide",
+                    row.season === "winter"
+                      ? "text-sky-800/80 dark:text-sky-300/90"
+                      : "text-red-800/80 dark:text-red-300/90"
+                  )}
+                >
                   OPS (xem nhanh)
                 </p>
                 <div className="grid w-full grid-cols-7 gap-0">
@@ -160,7 +215,10 @@ export function ScheduleMobileCards({
               <button
                 type="button"
                 onClick={() => onOpenRowEdit(row.id)}
-                className="w-full rounded-lg border border-zinc-200/90 bg-zinc-50/50 px-2 py-1.5 text-left transition hover:border-brand-400/50 hover:bg-brand-50/40 dark:border-zinc-700 dark:bg-zinc-900/40 dark:hover:border-brand-500/40"
+                className={cn(
+                  "w-full rounded-lg border px-2 py-1.5 text-left transition",
+                  mobileRemarkButtonClass(row)
+                )}
               >
                 <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                   Ghi chú

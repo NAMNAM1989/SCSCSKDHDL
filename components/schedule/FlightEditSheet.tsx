@@ -103,7 +103,12 @@ export function FlightEditSheet({
       }}
     >
       <div
-        className="flex max-h-[min(92vh,900px)] w-full max-w-lg flex-col rounded-t-2xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-700 dark:bg-zinc-900 sm:max-h-[90vh] sm:rounded-2xl"
+        className={cn(
+          "flex max-h-[min(92vh,900px)] w-full max-w-lg flex-col rounded-t-2xl border bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
+          row.season === "winter"
+            ? "border-sky-400/40 ring-2 ring-sky-500/15 dark:border-sky-600/45 dark:bg-zinc-900 dark:ring-sky-400/20"
+            : "border-red-400/35 ring-2 ring-red-500/12 dark:border-red-900/40 dark:bg-zinc-900 dark:ring-red-500/15"
+        )}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-zinc-200 px-4 pb-3 pt-4 dark:border-zinc-700">
@@ -152,6 +157,44 @@ export function FlightEditSheet({
                   />
                 </div>
               ))}
+            </div>
+
+            <div>
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Mùa lịch bay
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => onUpdateField(row.id, "season", "summer")}
+                  className={cn(
+                    "rounded-xl border-2 px-3 py-2.5 text-left transition",
+                    row.season === "summer"
+                      ? "border-red-500 bg-gradient-to-br from-red-50 to-orange-50/80 text-red-950 shadow-sm dark:border-red-400 dark:from-red-950/50 dark:to-zinc-900 dark:text-red-100"
+                      : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-red-300/60 dark:border-zinc-600 dark:bg-zinc-800/40 dark:text-zinc-400"
+                  )}
+                >
+                  <span className="block text-[13px] font-semibold">Mùa hè</span>
+                  <span className="text-[10px] text-red-800/80 dark:text-red-200/80">
+                    Viền & tô đỏ
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onUpdateField(row.id, "season", "winter")}
+                  className={cn(
+                    "rounded-xl border-2 px-3 py-2.5 text-left transition",
+                    row.season === "winter"
+                      ? "border-sky-500 bg-gradient-to-br from-sky-50 to-indigo-50/70 text-sky-950 shadow-sm dark:border-sky-400 dark:from-sky-950/45 dark:to-zinc-900 dark:text-sky-100"
+                      : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-sky-300/60 dark:border-zinc-600 dark:bg-zinc-800/40 dark:text-zinc-400"
+                  )}
+                >
+                  <span className="block text-[13px] font-semibold">Mùa đông</span>
+                  <span className="text-[10px] text-sky-800/80 dark:text-sky-200/80">
+                    Viền & tô xanh
+                  </span>
+                </button>
+              </div>
             </div>
 
             <div className="rounded-xl border-2 border-brand-500/40 bg-brand-50/50 p-3 dark:border-brand-500/35 dark:bg-brand-950/25">

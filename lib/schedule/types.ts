@@ -1,3 +1,5 @@
+export type ScheduleSeason = "summer" | "winter";
+
 export type OpsKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 export interface OpsMap {
@@ -29,6 +31,8 @@ export interface MbMap {
 
 export interface ScheduleRow {
   id: string;
+  /** Mùa lịch: hè (đỏ) / đông (xanh) — chọn ở form chuyến. */
+  season: ScheduleSeason;
   flt: string;
   ac: string;
   rtg: string;

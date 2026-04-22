@@ -14,7 +14,12 @@ import { META_KEY, SAVE_MS, STORAGE_KEY } from "@/lib/schedule/constants";
 import { parseExcelWorkbook } from "@/lib/schedule/excelImport";
 import { applyFieldToRow } from "@/lib/schedule/applyFieldUpdate";
 import { emptyOps, newRowId, normalizeRow } from "@/lib/schedule/rowModel";
-import { clearStorage, loadState, persistNow } from "@/lib/schedule/storage";
+import {
+  clearStorage,
+  getHydrationInitialState,
+  loadState,
+  persistNow,
+} from "@/lib/schedule/storage";
 import type { ScheduleMeta, ScheduleRow, ScheduleState } from "@/lib/schedule/types";
 import {
   applySyncRuntimeOverride,
@@ -75,7 +80,7 @@ export function useSchedule(): Ctx {
 }
 
 export function ScheduleProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<ScheduleState>(() => loadState());
+  const [state, setState] = useState<ScheduleState>(getHydrationInitialState);
   const [filter, setFilter] = useState("");
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(null);
@@ -127,6 +132,11 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     },
     [pushRemote]
   );
+
+  /** Sau mount: đọc localStorage — khớp SSR (tránh hydrate 3 dòng vs 60 dòng). */
+  useEffect(() => {
+    setState(loadState());
+  }, []);
 
   useEffect(() => {
     const t = getLastRemoteIso();
