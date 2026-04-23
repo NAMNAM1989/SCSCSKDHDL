@@ -6,15 +6,45 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { appRowToFlight, formatUpdatedDateForExport } from "@/lib/schedule/exportHelpers";
-import { exportFlightSchedule } from "@/lib/exportFlightSchedule";
 import { rowMatchesFilter } from "@/lib/schedule/rowModel";
+import type { ScheduleSeason } from "@/lib/schedule/types";
 import { buildPrintDocument } from "@/lib/schedule/print";
 import { Menu, Printer, Trash2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import type { DragEvent } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AirlineOpsFlightTable } from "./airline/AirlineOpsFlightTable";
-import { FlightEditSheet } from "./FlightEditSheet";
-import { ScheduleMobileCards } from "./ScheduleMobileCards";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const ScheduleMobileCardsLazy = dynamic(
+  () =>
+    import("./ScheduleMobileCards").then((m) => ({
+      default: m.ScheduleMobileCards,
+    })),
+  { ssr: false, loading: () => <div className="min-h-16 shrink-0 lg:hidden" /> }
+);
+
+const AirlineOpsFlightTableLazy = dynamic(
+  () =>
+    import("./airline/AirlineOpsFlightTable").then((m) => ({
+      default: m.AirlineOpsFlightTable,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="hidden min-h-[min(70vh,880px)] flex-1 bg-[#0B1E2D] lg:flex"
+        aria-hidden
+      />
+    ),
+  }
+);
+
+const FlightEditSheetLazy = dynamic(
+  () =>
+    import("./FlightEditSheet").then((m) => ({
+      default: m.FlightEditSheet,
+    })),
+  { ssr: false }
+);
 
 export function ScheduleClient({
   mode = "home",
@@ -128,11 +158,17 @@ export function ScheduleClient({
     }, 180);
   }, [state]);
 
-  const filtered = state.rows.filter((r) =>
-    rowMatchesFilter(r, filter.trim().toLowerCase())
+  const filterNorm = filter.trim().toLowerCase();
+  const filtered = useMemo(
+    () =>
+      filterNorm
+        ? state.rows.filter((r) => rowMatchesFilter(r, filterNorm))
+        : state.rows,
+    [state.rows, filterNorm]
   );
 
-  const exportExcel = async () => {
+  const exportExcel = useCallback(async () => {
+    const { exportFlightSchedule } = await import("@/lib/exportFlightSchedule");
     const q = filter.trim().toLowerCase();
     const rowsToExport = !q
       ? state.rows
@@ -140,20 +176,38 @@ export function ScheduleClient({
     const flights = rowsToExport.map(appRowToFlight);
     const ud = formatUpdatedDateForExport(state.meta.updatedDate || "08APR26");
     await exportFlightSchedule({ flights, updatedDate: ud });
-  };
+  }, [filter, state.rows, state.meta.updatedDate]);
 
-  const onDragStart = (e: DragEvent<HTMLTableRowElement>, id: string) => {
-    if (!canEdit) return;
-    e.dataTransfer.setData("text/plain", id);
-    e.dataTransfer.effectAllowed = "move";
-  };
+  const onDragStart = useCallback(
+    (e: DragEvent<HTMLTableRowElement>, id: string) => {
+      if (!canEdit) return;
+      e.dataTransfer.setData("text/plain", id);
+      e.dataTransfer.effectAllowed = "move";
+    },
+    [canEdit]
+  );
 
-  const onDrop = (e: DragEvent<HTMLTableRowElement>, toId: string) => {
-    if (!canEdit) return;
-    e.preventDefault();
-    const fromId = e.dataTransfer.getData("text/plain");
-    reorder(fromId, toId);
-  };
+  const onDrop = useCallback(
+    (e: DragEvent<HTMLTableRowElement>, toId: string) => {
+      if (!canEdit) return;
+      e.preventDefault();
+      const fromId = e.dataTransfer.getData("text/plain");
+      reorder(fromId, toId);
+    },
+    [canEdit, reorder]
+  );
+
+  const onOpenRowEdit = useCallback((id: string) => {
+    setSheetRowId(id);
+  }, []);
+
+  const onSeasonChange = useCallback(
+    (id: string, season: ScheduleSeason) => {
+      if (!canEdit) return;
+      updateField(id, "season", season);
+    },
+    [canEdit, updateField]
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden lg:min-h-0 lg:flex-1 lg:overflow-hidden">
@@ -171,7 +225,7 @@ export function ScheduleClient({
             <Button
               variant="secondary"
               className="!min-h-9 !justify-center !text-xs"
-              onClick={() => exportExcel().catch(alert)}
+              onClick={() => void exportExcel().catch(alert)}
             >
               Export
             </Button>
@@ -235,7 +289,7 @@ export function ScheduleClient({
             <Button
               variant="secondary"
               className="!min-h-10 shrink-0 !rounded-xl !px-3 !text-sm !font-normal"
-              onClick={() => exportExcel().catch(alert)}
+              onClick={() => void exportExcel().catch(alert)}
             >
               Export Excel
             </Button>
@@ -375,25 +429,22 @@ export function ScheduleClient({
               <span className="text-slate-500">{state.rows.length} trong bộ nhớ</span>
             ) : null}
           </div>
-          <ScheduleMobileCards
+          <ScheduleMobileCardsLazy
             rows={filtered}
-            onOpenRowEdit={(id) => setSheetRowId(id)}
+            onOpenRowEdit={onOpenRowEdit}
             onRemoveRow={removeRow}
             canEdit={canEdit}
           />
           <div className="hidden min-h-0 min-w-0 flex-1 flex-col bg-[#0B1E2D] lg:flex lg:min-h-[min(70vh,880px)] xl:min-h-[min(75vh,920px)]">
-            <AirlineOpsFlightTable
+            <AirlineOpsFlightTableLazy
               rows={filtered}
               selectedRowId={selectedRowId}
               onSelectRow={setSelectedRowId}
-              onOpenEdit={setSheetRowId}
+              onOpenEdit={onOpenRowEdit}
               onRemoveRow={removeRow}
-              onSeasonChange={(id, season) => {
-                if (!canEdit) return;
-                updateField(id, "season", season);
-              }}
-              onDragStart={(e, id) => onDragStart(e, id)}
-              onDrop={(e, toId) => onDrop(e, toId)}
+              onSeasonChange={onSeasonChange}
+              onDragStart={onDragStart}
+              onDrop={onDrop}
               canEdit={canEdit}
             />
           </div>
@@ -423,7 +474,7 @@ export function ScheduleClient({
         </div>
       </div>
 
-      <FlightEditSheet
+      <FlightEditSheetLazy
         open={Boolean(sheetRowId && sheetRow)}
         onClose={() => setSheetRowId(null)}
         row={sheetRow}

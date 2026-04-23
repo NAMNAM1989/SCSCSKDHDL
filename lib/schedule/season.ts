@@ -1,3 +1,4 @@
+import { isStdHighlightActive } from "./stdHighlight";
 import type { ScheduleRow, ScheduleSeason } from "./types";
 
 export const DEFAULT_SEASON: ScheduleSeason = "summer";
@@ -45,8 +46,11 @@ export function flightDataBoxClass(row: ScheduleRow): string {
   return "border-red-500/55 bg-red-950/35 text-red-50/95 dark:border-red-500/50 dark:bg-red-950/40 dark:text-red-50/95";
 }
 
-/** Nút STD (ô giờ khởi hành). */
-export function flightStdButtonClass(row: ScheduleRow): string {
+/** Nút STD (ô giờ khởi hành) — dùng khi cần style “đèn” sau khi sửa STD. */
+export function flightStdButtonClass(row: ScheduleRow, now = Date.now()): string {
+  if (!isStdHighlightActive(row, now)) {
+    return "border border-slate-600/60 bg-slate-800/45 text-slate-200 shadow-sm transition hover:border-slate-500/70 hover:bg-slate-800/60 focus:outline-none focus:ring-2 focus:ring-slate-500/30";
+  }
   if (row.season === "winter") {
     return "border-sky-500/60 bg-sky-500/20 text-sky-100 shadow-sm transition hover:border-sky-400/85 hover:bg-sky-500/30 focus:outline-none focus:ring-2 focus:ring-sky-500/40";
   }
@@ -88,11 +92,36 @@ export function mobileCardShellClass(row: ScheduleRow): string {
   return "bg-gradient-to-br from-rose-50/40 to-orange-50/25 dark:from-red-950/15 dark:to-zinc-900/80";
 }
 
-export function mobileStdButtonClass(row: ScheduleRow): string {
+export function mobileStdButtonClass(row: ScheduleRow, now = Date.now()): string {
+  const hi = isStdHighlightActive(row, now);
   if (row.season === "winter") {
-    return "border-2 border-sky-500/50 bg-gradient-to-br from-sky-500/15 to-indigo-500/8 shadow-sm transition hover:border-sky-500/70 hover:from-sky-500/20 dark:border-sky-500/40 dark:from-sky-500/18 dark:to-indigo-950/25";
+    if (hi) {
+      return "border-2 border-sky-500/50 bg-gradient-to-br from-sky-500/15 to-indigo-500/8 shadow-sm transition hover:border-sky-500/70 hover:from-sky-500/20 dark:border-sky-500/40 dark:from-sky-500/18 dark:to-indigo-950/25";
+    }
+    return "border border-slate-500/55 bg-slate-800/45 shadow-sm transition hover:border-slate-400/60 hover:bg-slate-800/60 dark:border-slate-600/60 dark:bg-slate-900/70 dark:hover:border-slate-500/55";
   }
-  return "border-2 border-red-500/45 bg-gradient-to-br from-red-500/12 to-orange-500/8 shadow-sm transition hover:border-red-500/65 hover:from-red-500/18 dark:border-red-500/40 dark:from-red-500/16 dark:to-orange-950/20";
+  if (hi) {
+    return "border-2 border-red-500/45 bg-gradient-to-br from-red-500/12 to-orange-500/8 shadow-sm transition hover:border-red-500/65 hover:from-red-500/18 dark:border-red-500/40 dark:from-red-500/16 dark:to-orange-950/20";
+  }
+  return "border border-zinc-300/75 bg-zinc-100/90 shadow-sm transition hover:border-zinc-400 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800/55 dark:hover:border-zinc-500 dark:hover:bg-zinc-800/75";
+}
+
+export function mobileStdClockIconClass(row: ScheduleRow, now = Date.now()): string {
+  if (!isStdHighlightActive(row, now)) {
+    return "text-zinc-500 dark:text-zinc-400";
+  }
+  return row.season === "winter"
+    ? "text-sky-600 dark:text-sky-300"
+    : "text-red-600 dark:text-red-300";
+}
+
+export function mobileStdCaptionClass(row: ScheduleRow, now = Date.now()): string {
+  if (!isStdHighlightActive(row, now)) {
+    return "text-zinc-500 dark:text-zinc-400";
+  }
+  return row.season === "winter"
+    ? "text-sky-900/90 dark:text-sky-200/95"
+    : "text-red-900/90 dark:text-red-200/95";
 }
 
 export function mobileSttBadgeClass(row: ScheduleRow): string {

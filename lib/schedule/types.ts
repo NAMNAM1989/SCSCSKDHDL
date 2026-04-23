@@ -37,6 +37,8 @@ export interface ScheduleRow {
   ac: string;
   rtg: string;
   std: string;
+  /** ISO: sau thời điểm này nút STD mobile về màu bình thường — gán khi STD đổi. */
+  stdHighlightUntil?: string | null;
   gen: string;
   per: string;
   doc: string;

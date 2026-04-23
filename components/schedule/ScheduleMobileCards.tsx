@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { OPS_DAY_LABELS, OPS_KEYS } from "@/lib/schedule/constants";
+import { countFlightsWithDayTick } from "@/lib/schedule/opsDayCounts";
 import { fieldDiffersOrig } from "@/lib/schedule/rowModel";
 import {
   mobileCardSeasonClass,
@@ -11,12 +12,16 @@ import {
   mobileOpsPanelClass,
   mobileRemarkButtonClass,
   mobileStdButtonClass,
+  mobileStdCaptionClass,
+  mobileStdClockIconClass,
   mobileSttBadgeClass,
 } from "@/lib/schedule/season";
 import type { ScheduleRow } from "@/lib/schedule/types";
 import { cn } from "@/lib/cn";
 import { Clock, Trash2 } from "lucide-react";
+import { memo, useMemo } from "react";
 import { OpsCell } from "./OpsCell";
+import { useStdHighlightClock } from "./useStdHighlightClock";
 
 type Props = {
   rows: ScheduleRow[];
@@ -54,14 +59,42 @@ function cutOffLineParts(row: ScheduleRow) {
 }
 
 /** Thẻ chuyến mobile — đủ thông tin: cut-off, OPS gọn, ghi chú luôn hiển thị */
-export function ScheduleMobileCards({
+export const ScheduleMobileCards = memo(function ScheduleMobileCards({
   rows,
   onOpenRowEdit,
   onRemoveRow,
   canEdit = true,
 }: Props) {
+  const now = useStdHighlightClock(rows);
+  const dayTotals = useMemo(() => countFlightsWithDayTick(rows), [rows]);
+
   return (
     <div className="flex w-full min-w-0 flex-col gap-2 pb-1 lg:hidden">
+      <div
+        className="rounded-xl border border-zinc-200/90 bg-white/90 px-2.5 py-2 shadow-sm dark:border-zinc-700/80 dark:bg-zinc-900/70"
+        role="status"
+        aria-label="Số chuyến có ngày OPS được tick hoặc có giờ"
+      >
+        <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          Chuyến có ngày tick (X hoặc giờ)
+        </p>
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          {OPS_KEYS.map((k, i) => (
+            <span
+              key={k}
+              className="inline-flex items-baseline gap-0.5 tabular-nums"
+              title={`${OPS_DAY_LABELS[k]}: ${dayTotals[i]} chuyến`}
+            >
+              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                {dayTotals[i]}
+              </span>
+              <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                {OPS_DAY_LABELS[k]}
+              </span>
+            </span>
+          ))}
+        </div>
+      </div>
       {rows.map((row, idx) => {
         const cutParts = cutOffLineParts(row);
         return (
@@ -129,24 +162,20 @@ export function ScheduleMobileCards({
                 onClick={() => onOpenRowEdit(row.id)}
                 className={cn(
                   "flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-left active:scale-[0.99]",
-                  mobileStdButtonClass(row)
+                  mobileStdButtonClass(row, now)
                 )}
               >
                 <Clock
                   className={cn(
                     "h-5 w-5 shrink-0",
-                    row.season === "winter"
-                      ? "text-sky-600 dark:text-sky-300"
-                      : "text-red-600 dark:text-red-300"
+                    mobileStdClockIconClass(row, now)
                   )}
                 />
                 <div className="min-w-0 flex-1">
                   <p
                     className={cn(
                       "text-[10px] font-semibold uppercase tracking-wide",
-                      row.season === "winter"
-                        ? "text-sky-900/90 dark:text-sky-200/95"
-                        : "text-red-900/90 dark:text-red-200/95"
+                      mobileStdCaptionClass(row, now)
                     )}
                   >
                     STD — chạm để sửa chuyến
@@ -245,4 +274,4 @@ export function ScheduleMobileCards({
       })}
     </div>
   );
-}
+});

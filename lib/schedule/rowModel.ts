@@ -60,6 +60,10 @@ export function normalizeRow(r: unknown): ScheduleRow | null {
     ac: x.ac != null ? String(x.ac) : "",
     rtg: x.rtg != null ? String(x.rtg) : "",
     std: x.std != null ? String(x.std) : "",
+    stdHighlightUntil:
+      x.stdHighlightUntil != null && String(x.stdHighlightUntil).trim()
+        ? String(x.stdHighlightUntil)
+        : null,
     gen: x.gen != null ? String(x.gen) : "",
     per: x.per != null ? String(x.per) : "",
     doc: x.doc != null ? String(x.doc) : "",

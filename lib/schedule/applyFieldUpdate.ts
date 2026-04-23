@@ -1,4 +1,5 @@
 import type { ScheduleRow, ScheduleSeason } from "./types";
+import { bumpStdHighlightUntil } from "./stdHighlight";
 import { isNAVal, minutesBefore, smartFormatTimeCell } from "./time";
 import {
   migrateRow,
@@ -22,6 +23,7 @@ export function applyFieldToRow(
     if (formatted === smartFormatTimeCell(row.std ?? "")) return row;
     const next = { ...row };
     next.std = formatted;
+    next.stdHighlightUntil = bumpStdHighlightUntil();
     const hadB = rowHasBaseline(next);
     if (!hadB && next.std) snapshotOrigAndMb(next);
     else if (hadB && next.std) recalcCutoffsFromMb(next);

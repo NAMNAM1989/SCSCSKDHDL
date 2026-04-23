@@ -11,13 +11,9 @@ import {
 } from "@/lib/sync/env";
 import { getPresetLoginConfig } from "@/lib/auth/presetLogin";
 import { readSyncPrefsFromLocalStorage } from "@/lib/sync/syncLocalPrefs";
+import { loadSupabaseJs } from "@/lib/sync/loadSupabaseJs";
 import { cn } from "@/lib/cn";
-import {
-  createClient,
-  type Session,
-  type SupabaseClient,
-  type User,
-} from "@supabase/supabase-js";
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import {
   createContext,
   useCallback,
@@ -60,13 +56,14 @@ function resolveRole(user: User | null): Role {
 let authClient: SupabaseClient | null = null;
 let authClientKey = "";
 
-function getAuthClient(): SupabaseClient | null {
+async function getAuthClient(): Promise<SupabaseClient | null> {
   const finalUrl = getSupabaseUrl();
   const finalKey = getSupabaseAnonKey();
   if (!finalUrl || !finalKey) return null;
 
   const k = `${finalUrl}|${finalKey}`;
   if (!authClient || authClientKey !== k) {
+    const { createClient } = await loadSupabaseJs();
     authClient = createClient(finalUrl, finalKey);
     authClientKey = k;
   }
@@ -259,30 +256,34 @@ export function AuthProvider({
 
   useEffect(() => {
     if (!runtimeReady) return;
-    const sb = getAuthClient();
-    if (!sb) {
-      setLoading(false);
-      return;
-    }
     let active = true;
-    void sb.auth.getSession().then(({ data }) => {
+    let unsub: { unsubscribe: () => void } | null = null;
+    void (async () => {
+      const sb = await getAuthClient();
+      if (!active) return;
+      if (!sb) {
+        setLoading(false);
+        return;
+      }
+      const { data } = await sb.auth.getSession();
       if (!active) return;
       setSession(data.session ?? null);
       setLoading(false);
-    });
-    const { data: sub } = sb.auth.onAuthStateChange((_event, next) => {
-      if (!active) return;
-      setSession(next);
-      setLoading(false);
-    });
+      const { data: sub } = sb.auth.onAuthStateChange((_event, next) => {
+        if (!active) return;
+        setSession(next);
+        setLoading(false);
+      });
+      unsub = sub.subscription;
+    })();
     return () => {
       active = false;
-      sub.subscription.unsubscribe();
+      unsub?.unsubscribe();
     };
   }, [runtimeReady]);
 
   const signInWithPassword = useCallback(async (email: string, password: string) => {
-    const sb = getAuthClient();
+    const sb = await getAuthClient();
     if (!sb) throw new Error("Supabase chưa cấu hình.");
     setLoading(true);
     const { error } = await sb.auth.signInWithPassword({ email, password });
@@ -305,7 +306,7 @@ export function AuthProvider({
   );
 
   const signOut = useCallback(async () => {
-    const sb = getAuthClient();
+    const sb = await getAuthClient();
     if (!sb) return;
     await sb.auth.signOut();
   }, []);

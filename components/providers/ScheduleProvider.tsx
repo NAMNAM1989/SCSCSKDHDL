@@ -11,7 +11,6 @@ import {
   type ReactNode,
 } from "react";
 import { META_KEY, SAVE_MS, STORAGE_KEY } from "@/lib/schedule/constants";
-import { parseExcelWorkbook } from "@/lib/schedule/excelImport";
 import { applyFieldToRow } from "@/lib/schedule/applyFieldUpdate";
 import { emptyOps, newRowId, normalizeRow } from "@/lib/schedule/rowModel";
 import {
@@ -231,6 +230,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     let unsubscribe = () => {};
     let pollTimer: ReturnType<typeof setInterval> | null = null;
+    const lastPollAt = { current: 0 };
 
     function applyRemoteFromServer(next: ScheduleState, updatedAt: string) {
       setState((prev) => {
@@ -250,8 +250,12 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       });
     }
 
-    async function pullRemoteSnapshot() {
+    async function pullRemoteSnapshot(force = false) {
       if (cancelled) return;
+      if (!force && typeof document !== "undefined" && document.hidden) return;
+      const t = Date.now();
+      if (!force && t - lastPollAt.current < 4000) return;
+      lastPollAt.current = t;
       try {
         const r = await fetchRemoteState(docId);
         if (cancelled || !r) return;
@@ -279,13 +283,13 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       unsubscribe = subscribeRemoteState(docId, applyRemoteFromServer);
       pollTimer = setInterval(() => {
-        void pullRemoteSnapshot();
-      }, 4000);
-      void pullRemoteSnapshot();
+        void pullRemoteSnapshot(false);
+      }, 8000);
+      void pullRemoteSnapshot(true);
     })();
 
     const onVisible = () => {
-      if (document.visibilityState === "visible") void pullRemoteSnapshot();
+      if (document.visibilityState === "visible") void pullRemoteSnapshot(true);
     };
     document.addEventListener("visibilitychange", onVisible);
 
@@ -406,6 +410,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const importExcelFile = useCallback(
     async (file: File) => {
       const buf = await file.arrayBuffer();
+      const { parseExcelWorkbook } = await import("@/lib/schedule/excelImport");
       const newRows = parseExcelWorkbook(buf);
       setState((s) => {
         const st = { ...s, rows: newRows };

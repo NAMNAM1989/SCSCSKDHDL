@@ -1,13 +1,16 @@
 "use client";
 
+import { useStdHighlightClock } from "@/components/schedule/useStdHighlightClock";
 import { Button } from "@/components/ui/Button";
 import { OPS_DAY_HEADER_EN, OPS_DAY_LABELS, OPS_KEYS } from "@/lib/schedule/constants";
+import { countFlightsWithDayTick } from "@/lib/schedule/opsDayCounts";
 import { fieldDiffersOrig } from "@/lib/schedule/rowModel";
+import { flightStdButtonClass } from "@/lib/schedule/season";
 import type { ScheduleRow, ScheduleSeason } from "@/lib/schedule/types";
 import { cn } from "@/lib/cn";
 import { Check, Trash2 } from "lucide-react";
 import type { DragEvent } from "react";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import {
   firstColSeasonBorder,
   isWinterRow,
@@ -20,21 +23,6 @@ import {
 const baseCell =
   "bg-[#0b1120] group-hover/row:bg-white/[0.04] text-sm leading-snug";
 const baseCellSelected = "bg-slate-800/35 group-hover/row:bg-white/[0.06]";
-
-const OPS_TIME_RE = /(\d{1,2}:\d{2})/;
-
-/** Số chuyến tính theo từng cột thứ (X/x hoặc giờ) — cùng logic xuất Excel. */
-function countFlightsPerDayColumn(list: ScheduleRow[]): number[] {
-  const t = [0, 0, 0, 0, 0, 0, 0];
-  for (const row of list) {
-    OPS_KEYS.forEach((k, i) => {
-      const s = String(row.ops[k] ?? "").trim();
-      if (!s) return;
-      if (s === "X" || s === "x" || OPS_TIME_RE.test(s)) t[i]++;
-    });
-  }
-  return t;
-}
 
 function SeasonBadge({ row }: { row: ScheduleRow }) {
   const w = isWinterRow(row);
@@ -103,7 +91,7 @@ type Props = {
 const thBase =
   "sticky top-0 z-[24] border-b border-slate-800 bg-slate-950/98 px-2 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400 backdrop-blur-sm lg:text-[13px]";
 
-export function AirlineOpsFlightTable({
+export const AirlineOpsFlightTable = memo(function AirlineOpsFlightTable({
   rows,
   selectedRowId,
   canEdit = true,
@@ -114,8 +102,9 @@ export function AirlineOpsFlightTable({
   onDragStart,
   onDrop,
 }: Props) {
+  const now = useStdHighlightClock(rows);
   const dayColumnTotals = useMemo(
-    () => countFlightsPerDayColumn(rows),
+    () => countFlightsWithDayTick(rows),
     [rows]
   );
 
@@ -327,7 +316,8 @@ export function AirlineOpsFlightTable({
                     }}
                     className={cn(
                       timeMonoFont,
-                      "block w-full min-w-0 whitespace-nowrap px-1.5 text-center text-base text-slate-200 tabular-nums underline-offset-2 hover:underline"
+                      "block w-full min-w-0 whitespace-nowrap px-1.5 py-0.5 text-center text-base tabular-nums underline-offset-2 hover:underline",
+                      flightStdButtonClass(row, now)
                     )}
                   >
                     {row.std?.trim() || "—"}
@@ -418,4 +408,4 @@ export function AirlineOpsFlightTable({
       </table>
     </div>
   );
-}
+});
