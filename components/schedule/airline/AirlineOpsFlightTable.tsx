@@ -5,8 +5,9 @@ import { OPS_DAY_HEADER_EN, OPS_DAY_LABELS, OPS_KEYS } from "@/lib/schedule/cons
 import { fieldDiffersOrig } from "@/lib/schedule/rowModel";
 import type { ScheduleRow, ScheduleSeason } from "@/lib/schedule/types";
 import { cn } from "@/lib/cn";
-import { Trash2 } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import type { DragEvent } from "react";
+import { useMemo } from "react";
 import {
   firstColSeasonBorder,
   isWinterRow,
@@ -19,6 +20,21 @@ import {
 const baseCell =
   "bg-[#0b1120] group-hover/row:bg-white/[0.04] text-sm leading-snug";
 const baseCellSelected = "bg-slate-800/35 group-hover/row:bg-white/[0.06]";
+
+const OPS_TIME_RE = /(\d{1,2}:\d{2})/;
+
+/** Số chuyến tính theo từng cột thứ (X/x hoặc giờ) — cùng logic xuất Excel. */
+function countFlightsPerDayColumn(list: ScheduleRow[]): number[] {
+  const t = [0, 0, 0, 0, 0, 0, 0];
+  for (const row of list) {
+    OPS_KEYS.forEach((k, i) => {
+      const s = String(row.ops[k] ?? "").trim();
+      if (!s) return;
+      if (s === "X" || s === "x" || OPS_TIME_RE.test(s)) t[i]++;
+    });
+  }
+  return t;
+}
 
 function SeasonBadge({ row }: { row: ScheduleRow }) {
   const w = isWinterRow(row);
@@ -53,15 +69,22 @@ function RouteText({ rtg }: { rtg: string }) {
   );
 }
 
-function DayDot({ active }: { active: boolean }) {
+function DayTick({ active }: { active: boolean }) {
+  if (active) {
+    return (
+      <span className="flex justify-center" title="Có khai thác (tick)">
+        <Check
+          className="h-4 w-4 shrink-0 text-emerald-400"
+          strokeWidth={2.75}
+          aria-label="Có chuyến"
+        />
+      </span>
+    );
+  }
   return (
-    <span
-      className={cn(
-        "inline-block h-2 w-2 rounded-full",
-        active ? "bg-emerald-400" : "bg-neutral-700"
-      )}
-      title={active ? "Active" : "—"}
-    />
+    <span className="block text-center text-slate-600" aria-hidden>
+      —
+    </span>
   );
 }
 
@@ -89,6 +112,11 @@ export function AirlineOpsFlightTable({
   onDragStart,
   onDrop,
 }: Props) {
+  const dayColumnTotals = useMemo(
+    () => countFlightsPerDayColumn(rows),
+    [rows]
+  );
+
   return (
     <div
       className="scrollbar-thin min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-auto rounded-b-lg bg-[#0b1120]"
@@ -166,16 +194,26 @@ export function AirlineOpsFlightTable({
             <th className={cn(thBase, "text-center")} title="R/U">
               R/U
             </th>
-            {OPS_KEYS.map((d) => (
+            {OPS_KEYS.map((d, di) => (
               <th
                 key={d}
                 className={cn(
                   thBase,
-                  "text-center text-[11px] font-semibold leading-tight text-slate-400 lg:text-xs"
+                  "px-1 py-2 text-center align-bottom"
                 )}
-                title={OPS_DAY_LABELS[d]}
+                title={`Số chuyến ${OPS_DAY_LABELS[d]}: ${dayColumnTotals[di]}`}
               >
-                {OPS_DAY_HEADER_EN[d]}
+                <div className="flex flex-col items-center justify-end gap-0.5">
+                  <span
+                    className="text-sm font-bold tabular-nums leading-none text-emerald-400/95"
+                    title={`Tổng chuyến trên ${OPS_DAY_LABELS[d]}`}
+                  >
+                    {dayColumnTotals[di]}
+                  </span>
+                  <span className="text-[10px] font-semibold leading-tight text-slate-500 lg:text-[11px]">
+                    {OPS_DAY_HEADER_EN[d]}
+                  </span>
+                </div>
               </th>
             ))}
             <th className={thBase} title="Remark">
@@ -335,7 +373,7 @@ export function AirlineOpsFlightTable({
                         </span>
                       ) : (
                         <div className="flex justify-center">
-                          <DayDot active={isX} />
+                          <DayTick active={isX} />
                         </div>
                       )}
                     </td>
