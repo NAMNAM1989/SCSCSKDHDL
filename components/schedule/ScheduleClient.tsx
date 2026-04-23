@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/components/providers/AuthProvider";
 import { useSchedule } from "@/components/providers/ScheduleProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -33,6 +34,7 @@ export function ScheduleClient({
     importExcelFile,
     clearDraft,
   } = useSchedule();
+  const { canEdit } = useAuth();
   const xlsxRef = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [sheetRowId, setSheetRowId] = useState<string | null>(null);
@@ -59,9 +61,13 @@ export function ScheduleClient({
   }, [selectedRowId, state.rows]);
 
   const handleAddFlight = useCallback(() => {
+    if (!canEdit) {
+      alert("Tài khoản Viewer chỉ có quyền xem.");
+      return;
+    }
     const id = addRow();
     if (id) setSheetRowId(id);
-  }, [addRow]);
+  }, [addRow, canEdit]);
 
   useEffect(() => {
     if (mode !== "search") return;
@@ -137,11 +143,13 @@ export function ScheduleClient({
   };
 
   const onDragStart = (e: DragEvent<HTMLTableRowElement>, id: string) => {
+    if (!canEdit) return;
     e.dataTransfer.setData("text/plain", id);
     e.dataTransfer.effectAllowed = "move";
   };
 
   const onDrop = (e: DragEvent<HTMLTableRowElement>, toId: string) => {
+    if (!canEdit) return;
     e.preventDefault();
     const fromId = e.dataTransfer.getData("text/plain");
     reorder(fromId, toId);
@@ -170,6 +178,7 @@ export function ScheduleClient({
             <Button
               variant="secondary"
               className="!min-h-9 !justify-center !text-xs"
+              disabled={!canEdit}
               onClick={() => xlsxRef.current?.click()}
             >
               Import
@@ -177,7 +186,9 @@ export function ScheduleClient({
             <Button
               variant="danger"
               className="!min-h-9 !justify-center !text-xs"
+              disabled={!canEdit}
               onClick={() => {
+                if (!canEdit) return;
                 if (!confirm("Xoá toàn bộ nháp?")) return;
                 if (!confirm("Xác nhận lần 2 — không hoàn tác.")) return;
                 clearDraft();
@@ -196,6 +207,7 @@ export function ScheduleClient({
         accept=".xlsx,.xls"
         className="hidden"
         onChange={async (e) => {
+          if (!canEdit) return;
           const f = e.target.files?.[0];
           e.target.value = "";
           if (!f) return;
@@ -230,6 +242,7 @@ export function ScheduleClient({
             <Button
               variant="secondary"
               className="!min-h-10 shrink-0 !rounded-xl !px-3 !text-sm !font-normal"
+              disabled={!canEdit}
               onClick={() => xlsxRef.current?.click()}
             >
               Import Excel
@@ -237,7 +250,9 @@ export function ScheduleClient({
             <Button
               variant="danger"
               className="!min-h-10 shrink-0 !rounded-xl !px-3 !text-sm !font-normal"
+              disabled={!canEdit}
               onClick={() => {
+                if (!canEdit) return;
                 if (!confirm("Xoá toàn bộ nháp?")) return;
                 if (!confirm("Xác nhận lần 2 — không hoàn tác.")) return;
                 clearDraft();
@@ -256,6 +271,7 @@ export function ScheduleClient({
             </label>
             <Input
               id="schedule-updated-dk"
+              disabled={!canEdit}
               value={state.meta.updatedDate}
               onChange={(e) =>
                 setMeta({ updatedDate: e.target.value.trim() || "08APR26" })
@@ -285,9 +301,10 @@ export function ScheduleClient({
           <Button
             variant="primary"
             className="w-full shrink-0 !min-h-10 !rounded-xl !bg-gradient-to-r !from-brand-600 !to-violet-600 !text-white hover:!from-brand-700 hover:!to-violet-700 sm:w-auto lg:min-w-[160px] lg:!text-sm dark:!from-brand-500 dark:!to-violet-600 dark:hover:!from-brand-600 dark:hover:!to-violet-700"
+            disabled={!canEdit}
             onClick={handleAddFlight}
           >
-            + Thêm chuyến
+            {canEdit ? "+ Thêm chuyến" : "Viewer: chỉ xem"}
           </Button>
         </div>
 
@@ -314,6 +331,7 @@ export function ScheduleClient({
                   </label>
                   <Input
                     id="schedule-updated-mb"
+                    disabled={!canEdit}
                     value={state.meta.updatedDate}
                     onChange={(e) =>
                       setMeta({
@@ -361,6 +379,7 @@ export function ScheduleClient({
             rows={filtered}
             onOpenRowEdit={(id) => setSheetRowId(id)}
             onRemoveRow={removeRow}
+            canEdit={canEdit}
           />
           <div className="hidden min-h-0 min-w-0 flex-1 flex-col bg-[#0B1E2D] lg:flex lg:min-h-[min(70vh,880px)] xl:min-h-[min(75vh,920px)]">
             <AirlineOpsFlightTable
@@ -369,9 +388,13 @@ export function ScheduleClient({
               onSelectRow={setSelectedRowId}
               onOpenEdit={setSheetRowId}
               onRemoveRow={removeRow}
-              onSeasonChange={(id, season) => updateField(id, "season", season)}
+              onSeasonChange={(id, season) => {
+                if (!canEdit) return;
+                updateField(id, "season", season);
+              }}
               onDragStart={(e, id) => onDragStart(e, id)}
               onDrop={(e, toId) => onDrop(e, toId)}
+              canEdit={canEdit}
             />
           </div>
         </Card>
@@ -392,9 +415,10 @@ export function ScheduleClient({
           <Button
             variant="primary"
             className="w-full !min-h-10 !rounded-lg !text-sm !font-semibold !shadow-sm !bg-gradient-to-r !from-brand-600 !to-violet-600 !text-white hover:!from-brand-700 hover:!to-violet-700 dark:!from-brand-500 dark:!to-violet-600 dark:hover:!from-brand-600 dark:hover:!to-violet-700"
+            disabled={!canEdit}
             onClick={handleAddFlight}
           >
-            + Thêm chuyến
+            {canEdit ? "+ Thêm chuyến" : "Viewer: chỉ xem"}
           </Button>
         </div>
       </div>
@@ -407,6 +431,7 @@ export function ScheduleClient({
         onUpdateField={updateField}
         onUpdateOps={updateOps}
         onRemoveRow={removeRow}
+        readOnly={!canEdit}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { CloudSyncSettings } from "@/components/settings/CloudSyncSettings";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -11,6 +12,7 @@ import { useTheme } from "next-themes";
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
   const { clearDraft, sync } = useSchedule();
+  const { user, role, canEdit, signOut } = useAuth();
 
   return (
     <div>
@@ -20,6 +22,30 @@ export default function ProfilePage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2">
+        <Card className="p-6 md:col-span-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Tài khoản
+          </p>
+          <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
+            {user?.email ?? "Chưa đăng nhập"}
+          </p>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            Quyền:{" "}
+            <span className="font-semibold uppercase">
+              {role === "admin" ? "Admin (được chỉnh sửa)" : "Viewer (chỉ xem)"}
+            </span>
+          </p>
+          <Button
+            variant="secondary"
+            className="mt-4"
+            onClick={() => {
+              void signOut();
+            }}
+          >
+            Đăng xuất
+          </Button>
+        </Card>
+
         <Card className="p-6 md:col-span-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             Supabase — đồng bộ điện thoại và máy khác
@@ -101,13 +127,15 @@ export default function ProfilePage() {
           <Button
             variant="danger"
             className="mt-6 w-full"
+            disabled={!canEdit}
             onClick={() => {
+              if (!canEdit) return;
               if (!confirm("Xoá toàn bộ nháp?")) return;
               if (!confirm("Xác nhận lần 2.")) return;
               clearDraft();
             }}
           >
-            Xoá dữ liệu cục bộ
+            {canEdit ? "Xoá dữ liệu cục bộ" : "Viewer: không được xoá dữ liệu"}
           </Button>
         </Card>
       </div>

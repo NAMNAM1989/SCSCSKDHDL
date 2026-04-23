@@ -91,6 +91,7 @@ function DayTick({ active }: { active: boolean }) {
 type Props = {
   rows: ScheduleRow[];
   selectedRowId: string | null;
+  canEdit?: boolean;
   onSelectRow: (id: string | null) => void;
   onOpenEdit: (id: string) => void;
   onRemoveRow: (id: string) => void;
@@ -105,6 +106,7 @@ const thBase =
 export function AirlineOpsFlightTable({
   rows,
   selectedRowId,
+  canEdit = true,
   onSelectRow,
   onOpenEdit,
   onRemoveRow,
@@ -246,7 +248,7 @@ export function AirlineOpsFlightTable({
             return (
               <tr
                 key={row.id}
-                draggable
+                draggable={canEdit}
                 onDragStart={(e) => onDragStart(e, row.id)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => onDrop(e, row.id)}
@@ -292,6 +294,7 @@ export function AirlineOpsFlightTable({
                   <div className="flex min-w-0 flex-col items-stretch gap-1.5 sm:flex-row sm:items-center sm:gap-2.5">
                     <select
                       aria-label="Season"
+                      disabled={!canEdit}
                       value={row.season}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) =>
@@ -300,7 +303,7 @@ export function AirlineOpsFlightTable({
                           e.target.value as ScheduleSeason
                         )
                       }
-                      className="min-w-0 cursor-pointer rounded border-0 border-slate-700/50 bg-slate-900/50 py-0.5 pl-1 pr-7 text-left text-sm text-slate-400 outline-none focus:ring-1 focus:ring-slate-600 sm:min-w-[5.5rem] sm:max-w-[7.5rem] sm:shrink-0"
+                      className="min-w-0 cursor-pointer rounded border-0 border-slate-700/50 bg-slate-900/50 py-0.5 pl-1 pr-7 text-left text-sm text-slate-400 outline-none focus:ring-1 focus:ring-slate-600 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[5.5rem] sm:max-w-[7.5rem] sm:shrink-0"
                     >
                       <option value="winter">Winter</option>
                       <option value="summer">Summer</option>
@@ -397,8 +400,10 @@ export function AirlineOpsFlightTable({
                   <Button
                     variant="ghost"
                     className="!h-9 !min-w-9 !p-0 text-slate-600 hover:text-rose-400/90"
+                    disabled={!canEdit}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!canEdit) return;
                       if (confirm("Xoá dòng?")) onRemoveRow(row.id);
                     }}
                     aria-label="Xoá dòng"

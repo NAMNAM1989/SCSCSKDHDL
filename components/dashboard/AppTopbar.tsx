@@ -1,10 +1,11 @@
 "use client";
 
 import { useDashboardShell } from "@/components/dashboard/dashboard-shell-context";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, Menu, Moon, Search, Sun, X } from "lucide-react";
+import { Bell, LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -19,6 +20,7 @@ const titles: Record<string, { title: string; desc?: string }> = {
 export function AppTopbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const { role, signOut } = useAuth();
   const { mobileNavOpen, toggleMobileNav } = useDashboardShell();
   /** Tránh lệch Sun/Moon giữa SSR và client (next-themes chỉ biết theme sau khi mount). */
   const [themeReady, setThemeReady] = useState(false);
@@ -88,6 +90,16 @@ export function AppTopbar() {
       </div>
 
       <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
+        <span
+          className={cn(
+            "hidden rounded px-2 py-1 text-[10px] font-semibold uppercase tracking-wide sm:inline-flex",
+            role === "admin"
+              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              : "bg-amber-500/12 text-amber-700 dark:text-amber-300"
+          )}
+        >
+          {role === "admin" ? "ADMIN" : "VIEWER"}
+        </span>
         <button
           type="button"
           className={cn(
@@ -111,6 +123,16 @@ export function AppTopbar() {
           ) : (
             <Moon className="h-[18px] w-[18px]" />
           )}
+        </Button>
+        <Button
+          variant="ghost"
+          className="!h-9 !min-h-9 !min-w-9 !rounded-lg !px-0 sm:!h-10 sm:!min-h-10 sm:!min-w-10 sm:!rounded-xl"
+          aria-label="Đăng xuất"
+          onClick={() => {
+            void signOut();
+          }}
+        >
+          <LogOut className="h-[18px] w-[18px]" />
         </Button>
         <div
           className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-gradient-to-br from-zinc-100 to-zinc-200 text-xs font-semibold text-zinc-600 dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900 dark:text-zinc-300 sm:flex"

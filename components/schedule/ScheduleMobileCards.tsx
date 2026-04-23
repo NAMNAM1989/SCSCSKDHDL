@@ -23,6 +23,7 @@ type Props = {
   /** Mở bảng chỉnh sửa (STD là điểm vào chính) */
   onOpenRowEdit: (id: string) => void;
   onRemoveRow: (id: string) => void;
+  canEdit?: boolean;
 };
 
 const CUTOFF_KEYS = [
@@ -57,6 +58,7 @@ export function ScheduleMobileCards({
   rows,
   onOpenRowEdit,
   onRemoveRow,
+  canEdit = true,
 }: Props) {
   return (
     <div className="flex w-full min-w-0 flex-col gap-2 pb-1 lg:hidden">
@@ -112,7 +114,9 @@ export function ScheduleMobileCards({
                   variant="ghost"
                   className="!h-9 !min-h-9 !w-9 shrink-0 !p-0 text-zinc-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                   aria-label="Xoá dòng"
+                  disabled={!canEdit}
                   onClick={() => {
+                    if (!canEdit) return;
                     if (confirm("Xoá dòng?")) onRemoveRow(row.id);
                   }}
                 >

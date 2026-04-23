@@ -19,6 +19,8 @@ type Props = {
   open: boolean;
   onClose: () => void;
   row: ScheduleRow | null;
+  /** Viewer chỉ xem, không được chỉnh sửa. */
+  readOnly?: boolean;
   /** Số thứ tự hiển thị (1-based) */
   rowIndex: number;
   onUpdateField: (id: string, field: keyof ScheduleRow, value: string) => void;
@@ -30,6 +32,7 @@ export function FlightEditSheet({
   open,
   onClose,
   row,
+  readOnly = false,
   rowIndex,
   onUpdateField,
   onUpdateOps,
@@ -50,6 +53,7 @@ export function FlightEditSheet({
   /** Trùng với blur — chỉ gọi khi chuẩn hoá khác `row.std` (provider cũng no-op, tránh gọi thừa) */
   const commitStd = useCallback(() => {
     if (!row) return;
+    if (readOnly) return;
     if (
       smartFormatTimeCell(stdDraftRef.current) ===
       smartFormatTimeCell(row.std ?? "")
@@ -57,7 +61,7 @@ export function FlightEditSheet({
       return;
     }
     onUpdateField(row.id, "std", stdDraftRef.current);
-  }, [row, onUpdateField]);
+  }, [row, onUpdateField, readOnly]);
 
   const handleClose = useCallback(() => {
     commitStd();
@@ -86,6 +90,7 @@ export function FlightEditSheet({
   if (!open || !row) return null;
 
   const remove = () => {
+    if (readOnly) return;
     if (!confirm("Xoá chuyến này?")) return;
     onRemoveRow(row.id);
     onClose();
@@ -152,6 +157,7 @@ export function FlightEditSheet({
                   </label>
                   <Input
                     className="!min-h-10 !text-[15px]"
+                    disabled={readOnly}
                     value={String(row[key] ?? "")}
                     onChange={(e) => onUpdateField(row.id, key, e.target.value)}
                   />
@@ -167,6 +173,7 @@ export function FlightEditSheet({
                 <button
                   type="button"
                   onClick={() => onUpdateField(row.id, "season", "summer")}
+                  disabled={readOnly}
                   className={cn(
                     "rounded-xl border-2 px-3 py-2.5 text-left transition",
                     row.season === "summer"
@@ -182,6 +189,7 @@ export function FlightEditSheet({
                 <button
                   type="button"
                   onClick={() => onUpdateField(row.id, "season", "winter")}
+                  disabled={readOnly}
                   className={cn(
                     "rounded-xl border-2 px-3 py-2.5 text-left transition",
                     row.season === "winter"
@@ -204,6 +212,7 @@ export function FlightEditSheet({
               <Input
                 className="!min-h-11 !border-brand-400/60 !text-lg !font-semibold tabular-nums dark:!border-brand-500/50"
                 placeholder="VD: 0845 hoặc 0920"
+                disabled={readOnly}
                 value={stdDraft}
                 onChange={(e) => setStdDraft(e.target.value)}
                 onFocus={() => {
@@ -239,6 +248,7 @@ export function FlightEditSheet({
                       key={`${row.id}-${key}-${row[key]}`}
                       defaultValue={String(row[key] ?? "")}
                       title={String(row[key] ?? "")}
+                      disabled={readOnly}
                       onBlur={(e) => onUpdateField(row.id, key, e.target.value)}
                       className={cn(
                         fieldIn,
@@ -270,7 +280,9 @@ export function FlightEditSheet({
                         row={row}
                         day={d}
                         compact
+                        readOnly={readOnly}
                         onToggle={() => {
+                          if (readOnly) return;
                           const cur = row.ops[d] || "";
                           onUpdateOps(
                             row.id,
@@ -292,6 +304,7 @@ export function FlightEditSheet({
               </label>
               <Input
                 className="!min-h-10 !text-[15px]"
+                disabled={readOnly}
                 value={row.remark}
                 onChange={(e) =>
                   onUpdateField(row.id, "remark", e.target.value)
@@ -302,14 +315,16 @@ export function FlightEditSheet({
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2 border-t border-zinc-200 px-4 py-3 dark:border-zinc-700">
-          <Button
-            variant="danger"
-            className="!min-h-10"
-            type="button"
-            onClick={remove}
-          >
-            Xoá chuyến
-          </Button>
+          {readOnly ? null : (
+            <Button
+              variant="danger"
+              className="!min-h-10"
+              type="button"
+              onClick={remove}
+            >
+              Xoá chuyến
+            </Button>
+          )}
           <Button
             variant="primary"
             className="min-w-[120px] flex-1 !min-h-10 sm:flex-none"
