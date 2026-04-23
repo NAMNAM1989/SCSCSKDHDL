@@ -72,8 +72,6 @@ const HEADERS = [
   "Remark",
 ];
 
-const COL_LETTERS = ["J", "K", "L", "M", "N", "O", "P"];
-
 const EMPTY_FLIGHT_ROW: Flight = {
   flt: "",
   ac: "",
@@ -99,6 +97,25 @@ function ensureSevenDays(days: (string | null | undefined)[]): (string | null)[]
   return out;
 }
 
+/**
+ * Tổng chuyến theo từng cột thứ (Mon…Sun) — tương ứng “có tích (tick)” trên lịch:
+ * đếm dòng có X/x trong ô ngày, hoặc giờ HH:MM (chuyến khai thác giờ đặc biệt ngày đó). Ô trống không đếm.
+ */
+function computeFlightsPerDay(flights: Flight[]): number[] {
+  const total = [0, 0, 0, 0, 0, 0, 0];
+  for (const f of flights) {
+    f.days.forEach((d, i) => {
+      if (d === null || d === undefined) return;
+      const s = String(d).trim();
+      if (s === "") return;
+      const isTick = s === "X" || s === "x";
+      const m = s.match(timeRegex);
+      if (isTick || m) total[i]++;
+    });
+  }
+  return total;
+}
+
 function downloadBlob(blob: Blob, filename: string): void {
   try {
     saveAs(blob, filename);
@@ -119,6 +136,9 @@ export async function exportFlightSchedule(params: ExportParams): Promise<void> 
 
   const sortedFlights =
     rawFlights.length > 0 ? sortFlights(rawFlights) : [EMPTY_FLIGHT_ROW];
+
+  const flightsForDayTotals = rawFlights.length > 0 ? sortFlights(rawFlights) : [];
+  const flightsPerDay = computeFlightsPerDay(flightsForDayTotals);
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "SCSC/OPS/EXP";
@@ -308,12 +328,9 @@ export async function exportFlightSchedule(params: ExportParams): Promise<void> 
   };
   labelCell.alignment = { horizontal: "center", vertical: "middle" };
 
-  const dataEndRow = totalRowNum - 1;
-  COL_LETTERS.forEach((col, di) => {
+  flightsPerDay.forEach((count, di) => {
     const cell = totalRow.getCell(10 + di);
-    cell.value = {
-      formula: `COUNTA(${col}${startRow}:${col}${dataEndRow})`,
-    };
+    cell.value = count;
     cell.font = {
       name: "Arial",
       bold: true,
