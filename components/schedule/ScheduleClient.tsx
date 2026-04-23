@@ -9,7 +9,7 @@ import { appRowToFlight, formatUpdatedDateForExport } from "@/lib/schedule/expor
 import { rowMatchesFilter } from "@/lib/schedule/rowModel";
 import type { ScheduleSeason } from "@/lib/schedule/types";
 import { buildPrintDocument } from "@/lib/schedule/print";
-import { Menu, Printer, Trash2 } from "lucide-react";
+import { Menu, Printer, Trash2, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -63,6 +63,8 @@ export function ScheduleClient({
     reorder,
     importExcelFile,
     clearDraft,
+    stdEditNotice,
+    dismissStdEditNotice,
   } = useSchedule();
   const { canEdit } = useAuth();
   const xlsxRef = useRef<HTMLInputElement>(null);
@@ -276,6 +278,24 @@ export function ScheduleClient({
       />
 
       <main className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col gap-2 pb-20 sm:max-w-2xl lg:mx-0 lg:max-w-none lg:min-h-0 lg:flex-1 lg:gap-3 lg:pb-0">
+        {stdEditNotice ? (
+          <div
+            role="status"
+            className="flex shrink-0 items-start gap-2 rounded-xl border border-emerald-500/35 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-950 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-950/40 dark:text-emerald-50"
+          >
+            <span className="min-w-0 flex-1 font-medium leading-snug">
+              {stdEditNotice}
+            </span>
+            <button
+              type="button"
+              className="shrink-0 rounded-lg p-1 text-emerald-800 hover:bg-emerald-200/60 dark:text-emerald-100 dark:hover:bg-emerald-900/60"
+              aria-label="Đóng thông báo"
+              onClick={dismissStdEditNotice}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
         {/* Desktop: một hàng — công cụ + Updated + Lọc + Thêm chuyến */}
         <div className="mb-1 hidden min-w-0 gap-3 rounded-2xl border border-zinc-200/90 bg-white p-3 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50 lg:mb-3 lg:flex lg:flex-row lg:flex-wrap lg:items-center xl:flex-nowrap xl:gap-3">
           <div className="flex shrink-0 flex-wrap items-center gap-2">

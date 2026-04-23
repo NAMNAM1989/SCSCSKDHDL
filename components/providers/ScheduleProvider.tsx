@@ -68,6 +68,9 @@ type Ctx = {
   importExcelFile: (file: File) => Promise<void>;
   clearDraft: () => void;
   sync: SyncInfo;
+  /** Thông báo tạm sau khi sửa STD (rõ chuyến bay). */
+  stdEditNotice: string | null;
+  dismissStdEditNotice: () => void;
 };
 
 const ScheduleContext = createContext<Ctx | null>(null);
@@ -85,8 +88,10 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(null);
   /** Sau khi đã thử env + fetch sync-config.json — tránh báo cloud tắt trong lúc tải cấu hình runtime */
   const [syncRuntimeReady, setSyncRuntimeReady] = useState(false);
+  const [stdEditNotice, setStdEditNotice] = useState<string | null>(null);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stdNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tabSyncRef = useRef<ReturnType<typeof createTabSync> | null>(null);
   const tabIdRef = useRef<string>("");
   if (!tabIdRef.current) {
@@ -186,7 +191,16 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (stdNoticeTimer.current) clearTimeout(stdNoticeTimer.current);
     };
+  }, []);
+
+  const dismissStdEditNotice = useCallback(() => {
+    if (stdNoticeTimer.current) {
+      clearTimeout(stdNoticeTimer.current);
+      stdNoticeTimer.current = null;
+    }
+    setStdEditNotice(null);
   }, []);
 
   /** Đồng bộ tab (BroadcastChannel) */
@@ -317,16 +331,51 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
 
   const updateField = useCallback(
     (id: string, field: keyof ScheduleRow, value: string) => {
+      let stdNoticePayload: {
+        flt: string;
+        std: string;
+        ac?: string;
+        rtg?: string;
+      } | null = null;
+
       setState((s) => {
         const rows = s.rows.map((row) => {
           if (row.id !== id) return row;
-          return applyFieldToRow(row, field, value);
+          const next = applyFieldToRow(row, field, value);
+          if (next !== row && field === "std") {
+            stdNoticePayload = {
+              flt: next.flt?.trim() || "(chưa có số hiệu)",
+              std: next.std?.trim() || "—",
+              ac: next.ac?.trim() || undefined,
+              rtg: next.rtg?.trim() || undefined,
+            };
+          }
+          return next;
         });
         if (rows.every((r, i) => r === s.rows[i])) return s;
         const st = { ...s, rows };
         scheduleSave(st);
         return st;
       });
+
+      if (stdNoticePayload) {
+        const { flt, std, ac, rtg } = stdNoticePayload;
+        const bits = [
+          `Đã cập nhật STD chuyến bay ${flt}`,
+          ac ? `· ${ac}` : null,
+          rtg ? `· ${rtg}` : null,
+          `→ STD: ${std}`,
+        ].filter(Boolean);
+        const msg = bits.join(" ");
+        queueMicrotask(() => {
+          setStdEditNotice(msg);
+          if (stdNoticeTimer.current) clearTimeout(stdNoticeTimer.current);
+          stdNoticeTimer.current = setTimeout(() => {
+            stdNoticeTimer.current = null;
+            setStdEditNotice(null);
+          }, 8000);
+        });
+      }
     },
     [scheduleSave]
   );
@@ -452,6 +501,8 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       importExcelFile,
       clearDraft,
       sync: syncInfo,
+      stdEditNotice,
+      dismissStdEditNotice,
     }),
     [
       state,
@@ -465,6 +516,8 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       importExcelFile,
       clearDraft,
       syncInfo,
+      stdEditNotice,
+      dismissStdEditNotice,
     ]
   );
 

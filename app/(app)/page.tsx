@@ -1,5 +1,5 @@
-import { ScheduleClient } from "@/components/schedule/ScheduleClient";
+import { ScheduleClientDynamic } from "@/components/schedule/ScheduleClient.dynamic";
 
 export default function HomePage() {
-  return <ScheduleClient mode="home" />;
+  return <ScheduleClientDynamic mode="home" />;
 }
