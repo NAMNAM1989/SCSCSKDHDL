@@ -89,7 +89,7 @@ type Props = {
 };
 
 const thBase =
-  "sticky top-0 z-[24] border-b border-slate-800 bg-slate-950/98 px-2 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400 backdrop-blur-sm lg:text-[13px]";
+  "sticky top-0 z-[24] border-b border-slate-800 bg-slate-950 px-2 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400 lg:text-[13px]";
 
 export const AirlineOpsFlightTable = memo(function AirlineOpsFlightTable({
   rows,
@@ -110,10 +110,10 @@ export const AirlineOpsFlightTable = memo(function AirlineOpsFlightTable({
 
   return (
     <div
-      className="scrollbar-thin min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-auto rounded-b-lg bg-[#0b1120]"
+      className="scrollbar-thin relative min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-auto rounded-b-lg bg-[#0b1120]"
       style={{ scrollbarGutter: "stable" }}
     >
-      <table className="w-full min-w-[1360px] table-fixed border-collapse text-left text-slate-300">
+      <table className="w-full min-w-[1360px] table-fixed border-separate border-spacing-0 text-left text-slate-300">
         <colgroup>
           <col className="w-9" />
           <col className="w-9" />

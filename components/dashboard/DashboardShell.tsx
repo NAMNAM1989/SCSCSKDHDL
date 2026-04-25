@@ -13,7 +13,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const wideDataPage = p === "/" || p === "/search";
 
   return (
-    <div className="flex min-h-dvh w-full max-w-full flex-col overflow-x-hidden bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex h-dvh w-full max-w-full flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       <div className="flex min-h-0 min-w-0 flex-1">
         <AppSidebar />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -25,7 +25,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             <div
               className={
                 wideDataPage
-                  ? "w-full max-w-none px-2.5 py-3 sm:px-3 sm:py-4 md:px-4 lg:px-5 xl:px-6 2xl:px-8 lg:py-6"
+                  ? "w-full max-w-none px-2.5 py-3 sm:px-3 sm:py-4 md:px-4 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden lg:px-5 lg:py-6 xl:px-6 2xl:px-8"
                   : "mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-5 sm:py-5 lg:px-8 lg:py-6"
               }
             >
