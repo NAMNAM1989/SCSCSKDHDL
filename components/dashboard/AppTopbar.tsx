@@ -20,7 +20,7 @@ const titles: Record<string, { title: string; desc?: string }> = {
 export function AppTopbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const { role, signOut } = useAuth();
+  const { role, user, signOut } = useAuth();
   const { mobileNavOpen, toggleMobileNav } = useDashboardShell();
   /** Tránh lệch Sun/Moon giữa SSR và client (next-themes chỉ biết theme sau khi mount). */
   const [themeReady, setThemeReady] = useState(false);
@@ -124,16 +124,18 @@ export function AppTopbar() {
             <Moon className="h-[18px] w-[18px]" />
           )}
         </Button>
-        <Button
-          variant="ghost"
-          className="!h-9 !min-h-9 !min-w-9 !rounded-lg !px-0 sm:!h-10 sm:!min-h-10 sm:!min-w-10 sm:!rounded-xl"
-          aria-label="Đăng xuất"
-          onClick={() => {
-            void signOut();
-          }}
-        >
-          <LogOut className="h-[18px] w-[18px]" />
-        </Button>
+        {user ? (
+          <Button
+            variant="ghost"
+            className="!h-9 !min-h-9 !min-w-9 !rounded-lg !px-0 sm:!h-10 sm:!min-h-10 sm:!min-w-10 sm:!rounded-xl"
+            aria-label="Đăng xuất"
+            onClick={() => {
+              void signOut();
+            }}
+          >
+            <LogOut className="h-[18px] w-[18px]" />
+          </Button>
+        ) : null}
         <div
           className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-gradient-to-br from-zinc-100 to-zinc-200 text-xs font-semibold text-zinc-600 dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900 dark:text-zinc-300 sm:flex"
           aria-hidden

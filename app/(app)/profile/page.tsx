@@ -35,15 +35,17 @@ export default function ProfilePage() {
               {role === "admin" ? "Admin (được chỉnh sửa)" : "Viewer (chỉ xem)"}
             </span>
           </p>
-          <Button
-            variant="secondary"
-            className="mt-4"
-            onClick={() => {
-              void signOut();
-            }}
-          >
-            Đăng xuất
-          </Button>
+          {user ? (
+            <Button
+              variant="secondary"
+              className="mt-4"
+              onClick={() => {
+                void signOut();
+              }}
+            >
+              Đăng xuất
+            </Button>
+          ) : null}
         </Card>
 
         <Card className="p-6 md:col-span-2">

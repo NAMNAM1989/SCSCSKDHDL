@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { appRowToFlight, formatUpdatedDateForExport } from "@/lib/schedule/exportHelpers";
+import { exportSchedulePdf } from "@/lib/schedule/exportPdf";
 import { rowMatchesFilter } from "@/lib/schedule/rowModel";
 import type { ScheduleSeason } from "@/lib/schedule/types";
-import { buildPrintDocument } from "@/lib/schedule/print";
 import { Menu, Printer, Trash2, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import type { DragEvent } from "react";
@@ -110,54 +110,8 @@ export function ScheduleClient({
     });
   }, [mode]);
 
-  const handlePrint = useCallback(() => {
-    const frame = document.createElement("iframe");
-    frame.setAttribute("aria-hidden", "true");
-    frame.style.position = "fixed";
-    frame.style.right = "0";
-    frame.style.bottom = "0";
-    frame.style.width = "0";
-    frame.style.height = "0";
-    frame.style.border = "0";
-    frame.style.opacity = "0";
-    frame.style.pointerEvents = "none";
-    document.body.appendChild(frame);
-
-    const cleanup = () => {
-      try {
-        if (document.body.contains(frame)) document.body.removeChild(frame);
-      } catch {
-        /* ignore */
-      }
-    };
-
-    const win = frame.contentWindow;
-    if (!win) {
-      cleanup();
-      alert("Không thể khởi tạo vùng in PDF.");
-      return;
-    }
-
-    const doc = win.document;
-    doc.open();
-    doc.write(buildPrintDocument(state));
-    doc.close();
-
-    const afterPrint = () => {
-      win.removeEventListener("afterprint", afterPrint);
-      cleanup();
-    };
-    win.addEventListener("afterprint", afterPrint);
-
-    setTimeout(() => {
-      try {
-        win.focus();
-        win.print();
-      } catch {
-        cleanup();
-        alert("Không mở được hộp thoại in. Vui lòng thử lại.");
-      }
-    }, 180);
+  const exportPdf = useCallback(async () => {
+    await exportSchedulePdf(state);
   }, [state]);
 
   const filterNorm = filter.trim().toLowerCase();
@@ -220,9 +174,9 @@ export function ScheduleClient({
             <Button
               variant="secondary"
               className="!min-h-9 !justify-center !text-xs"
-              onClick={handlePrint}
+              onClick={() => void exportPdf().catch(alert)}
             >
-              <Printer className="mr-1 h-3.5 w-3.5" /> In PDF
+              <Printer className="mr-1 h-3.5 w-3.5" /> Xuất PDF
             </Button>
             <Button
               variant="secondary"
@@ -297,14 +251,14 @@ export function ScheduleClient({
           </div>
         ) : null}
         {/* Desktop: một hàng — công cụ + Updated + Lọc + Thêm chuyến */}
-        <div className="mb-1 hidden min-w-0 gap-3 rounded-2xl border border-zinc-200/90 bg-white p-3 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50 lg:mb-3 lg:flex lg:flex-row lg:flex-wrap lg:items-center xl:flex-nowrap xl:gap-3">
+        <div className="sticky top-0 z-20 mb-1 hidden min-w-0 gap-3 rounded-2xl border border-zinc-200/90 bg-white/95 p-3 shadow-sm backdrop-blur-sm dark:border-zinc-800/80 dark:bg-zinc-900/90 lg:mb-3 lg:flex lg:flex-row lg:flex-wrap lg:items-center xl:flex-nowrap xl:gap-3">
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button
               variant="secondary"
               className="!min-h-10 shrink-0 !rounded-xl !px-3 !text-sm !font-normal"
-              onClick={handlePrint}
+              onClick={() => void exportPdf().catch(alert)}
             >
-              <Printer className="mr-1.5 h-3.5 w-3.5 shrink-0" /> In PDF
+              <Printer className="mr-1.5 h-3.5 w-3.5 shrink-0" /> Xuất PDF
             </Button>
             <Button
               variant="secondary"
@@ -383,7 +337,7 @@ export function ScheduleClient({
         </div>
 
         {/* Mobile: một hàng — menu + Updated/Lọc gọn */}
-        <div className="flex shrink-0 flex-col gap-2 lg:hidden">
+        <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-2 lg:hidden">
           <div className="flex items-stretch gap-2">
             <Button
               variant="secondary"
@@ -440,7 +394,7 @@ export function ScheduleClient({
         </div>
 
         <Card className="flex min-h-0 w-full min-w-0 flex-1 flex-col !overflow-hidden !rounded-lg !border !border-slate-800/80 !p-0 !shadow-sm dark:!bg-[#0b1120] sm:!rounded-xl lg:!min-h-0 lg:!rounded-2xl">
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-0.5 border-b border-slate-800/80 bg-slate-950/90 px-2.5 py-1.5 text-sm font-medium tabular-nums text-slate-400 lg:px-4 lg:py-2.5 lg:text-sm xl:py-3">
+          <div className="sticky top-0 z-10 flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-0.5 border-b border-slate-800/80 bg-slate-950/95 px-2.5 py-1.5 text-sm font-medium tabular-nums text-slate-400 lg:px-4 lg:py-2.5 lg:text-sm xl:py-3">
             <span className="text-slate-300/90">
               {filtered.length} dòng
               {filter.trim() ? " · lọc" : ""}
