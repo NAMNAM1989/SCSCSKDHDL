@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: 255 255 255;
+  --surface-muted: 248 250 252;
+  --font-sans: "Segoe UI", "Inter", "Helvetica Neue", Arial, system-ui, -apple-system, sans-serif;
+}
+
+.dark {
+  --surface: 15 23 42;
+  --surface-muted: 30 41 59;
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply min-h-dvh bg-zinc-100 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+  }
+}
+
+/* Print — giữ layout PDF như bản gốc */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+  body {
+    @apply bg-white text-black p-0;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .pdf-banner {
+    display: flex !important;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid #000;
+  }
+  .pdf-banner__left {
+    font-weight: 700;
+    font-size: 11pt;
+    color: #000 !important;
+  }
+  .pdf-banner__center {
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+  }
+  .pdf-banner__title {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #c00000 !important;
+    margin: 0;
+    line-height: 1.15;
+  }
+  .pdf-banner__updated {
+    margin-top: 0.15rem;
+    font-size: 11pt;
+    font-weight: 700;
+    color: #00b050 !important;
+    text-decoration: underline;
+  }
+  .pdf-banner__right {
+    font-size: 10pt;
+    font-weight: 700;
+    color: #000 !important;
+    white-space: nowrap;
+  }
+  .pdf-table-wrap {
+    margin-top: 0.2rem;
+    overflow: visible;
+  }
+  table.pdf-table {
+    width: 100%;
+    border-collapse: collapse !important;
+    font-size: 10pt;
+    table-layout: fixed;
+  }
+  table.pdf-table th,
+  table.pdf-table td {
+    border: 1px solid #000 !important;
+    padding: 0.12rem 0.18rem !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    word-wrap: break-word;
+  }
+  table.pdf-table thead th {
+    background: #ffff00 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    font-size: 11pt !important;
+  }
+  table.pdf-table thead th.sun-col,
+  table.pdf-table tbody td.sun-col {
+    background: #fce4e4 !important;
+  }
+  table.pdf-table tbody td {
+    font-size: 10pt;
+    background: #fff !important;
+  }
+  table.pdf-table tbody tr:nth-child(even) td:not(.sun-col) {
+    background: #fff !important;
+  }
+  table.pdf-table td.remark-col {
+    text-align: left !important;
+    font-size: 9pt !important;
+    white-space: normal !important;
+  }
+  .pdf-na {
+    color: #e06666 !important;
+    font-style: italic !important;
+  }
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.5) transparent;
+}
+
+/* Thay framer-motion trên shell — animation nhẹ khi đổi route */
+@keyframes dashboard-main-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.dashboard-main-enter {
+  animation: dashboard-main-enter 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
