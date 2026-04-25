@@ -11,8 +11,8 @@ export const DEFAULT_PRESET_VIEWER_EMAIL = "viewer@cutoffscsc.internal";
 export type PresetLoginPair = { email: string; password: string };
 
 export type PresetLoginConfig = {
-  admin: PresetLoginPair;
-  viewer: PresetLoginPair;
+  admin?: PresetLoginPair;
+  viewer?: PresetLoginPair;
 };
 
 function trimEnv(name: string): string {
@@ -21,12 +21,12 @@ function trimEnv(name: string): string {
 }
 
 /**
- * Bật khi cả hai mật khẩu preset đều có (email lấy mặc định hoặc env).
+ * Bật preset nào có mật khẩu tương ứng (email lấy mặc định hoặc env).
  */
 export function getPresetLoginConfig(): PresetLoginConfig | null {
   const adminPassword = trimEnv("NEXT_PUBLIC_CUTOFF_PRESET_ADMIN_PASSWORD");
   const viewerPassword = trimEnv("NEXT_PUBLIC_CUTOFF_PRESET_VIEWER_PASSWORD");
-  if (!adminPassword || !viewerPassword) return null;
+  if (!adminPassword && !viewerPassword) return null;
 
   const adminEmail =
     trimEnv("NEXT_PUBLIC_CUTOFF_PRESET_ADMIN_EMAIL") || DEFAULT_PRESET_ADMIN_EMAIL;
@@ -34,7 +34,11 @@ export function getPresetLoginConfig(): PresetLoginConfig | null {
     trimEnv("NEXT_PUBLIC_CUTOFF_PRESET_VIEWER_EMAIL") || DEFAULT_PRESET_VIEWER_EMAIL;
 
   return {
-    admin: { email: adminEmail, password: adminPassword },
-    viewer: { email: viewerEmail, password: viewerPassword },
+    ...(adminPassword
+      ? { admin: { email: adminEmail, password: adminPassword } }
+      : null),
+    ...(viewerPassword
+      ? { viewer: { email: viewerEmail, password: viewerPassword } }
+      : null),
   };
 }

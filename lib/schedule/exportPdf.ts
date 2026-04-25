@@ -45,7 +45,7 @@ export async function exportSchedulePdf(state: ScheduleState): Promise<void> {
   doc.setFontSize(15);
   doc.setTextColor(178, 34, 34);
   doc.text(
-    pdfSafeText("SUM2025 — FLIGHT SCHEDULE & HANDLING (EXPORT)"),
+    pdfSafeText("SCSC_2026 — FLIGHT SCHEDULE & HANDLING (EXPORT)"),
     pageCenterX,
     10,
     {

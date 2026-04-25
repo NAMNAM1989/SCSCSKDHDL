@@ -9,7 +9,7 @@ import { appRowToFlight, formatUpdatedDateForExport } from "@/lib/schedule/expor
 import { exportSchedulePdf } from "@/lib/schedule/exportPdf";
 import { rowMatchesFilter } from "@/lib/schedule/rowModel";
 import type { ScheduleSeason } from "@/lib/schedule/types";
-import { Menu, Printer, Rows3, Trash2, X } from "lucide-react";
+import { Menu, Printer, Trash2, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -164,29 +164,6 @@ export function ScheduleClient({
     },
     [canEdit, updateField]
   );
-
-  const addTestRowsTo50 = useCallback(() => {
-    if (!canEdit) return;
-    const target = 50;
-    const missing = Math.max(0, target - state.rows.length);
-    if (!missing) {
-      alert("Da co tu 50 dong tro len.");
-      return;
-    }
-
-    const base = state.rows.length;
-    for (let i = 0; i < missing; i += 1) {
-      const id = addRow();
-      if (!id) continue;
-      const seq = base + i + 1;
-      updateField(id, "flt", `TEST${String(seq).padStart(3, "0")}`);
-      updateField(id, "ac", "A321");
-      updateField(id, "rtg", "SGN-TEST");
-      updateField(id, "std", "00:00");
-      updateField(id, "remark", "auto-test-scroll");
-    }
-    alert(`Da them ${missing} dong test de du 50 dong.`);
-  }, [addRow, canEdit, state.rows.length, updateField]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden lg:min-h-0 lg:flex-1 lg:overflow-hidden">
@@ -356,16 +333,6 @@ export function ScheduleClient({
             onClick={handleAddFlight}
           >
             {canEdit ? "+ Thêm chuyến" : "Viewer: chỉ xem"}
-          </Button>
-          <Button
-            variant="secondary"
-            className="w-full shrink-0 !min-h-10 !rounded-xl sm:w-auto lg:min-w-[160px] lg:!text-sm"
-            disabled={!canEdit}
-            onClick={addTestRowsTo50}
-            title="Them nhanh du 50 dong de test cuon + sticky header"
-          >
-            <Rows3 className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-            Tao 50 dong test
           </Button>
         </div>
 

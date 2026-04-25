@@ -127,14 +127,6 @@ function LoginPanel({ configured }: { configured: boolean }) {
               >
                 {loading ? "Đang xử lý..." : "Đăng nhập Admin"}
               </Button>
-              <Button
-                variant="secondary"
-                className="w-full"
-                disabled={!configured || loading}
-                onClick={() => void submitPreset("viewer")}
-              >
-                {loading ? "Đang xử lý..." : "Đăng nhập User (chỉ xem)"}
-              </Button>
             </>
           ) : (
             <>
@@ -183,8 +175,8 @@ function LoginPanel({ configured }: { configured: boolean }) {
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
             {presetLogin ? (
               <>
-                Hai user tương ứng phải tồn tại trong Supabase (email nội bộ cố
-                định, xem{" "}
+                User Admin tương ứng phải tồn tại trong Supabase (email nội bộ
+                cố định, xem{" "}
                 <code className="rounded bg-zinc-100 px-1 py-0.5 dark:bg-zinc-800">
                   docs/auth-rbac-setup.md
                 </code>
@@ -300,6 +292,7 @@ export function AuthProvider({
       const preset = getPresetLoginConfig();
       if (!preset) throw new Error("Chưa cấu hình preset đăng nhập.");
       const pair = kind === "admin" ? preset.admin : preset.viewer;
+      if (!pair) throw new Error(`Chưa cấu hình preset ${kind}.`);
       await signInWithPassword(pair.email, pair.password);
     },
     [signInWithPassword]

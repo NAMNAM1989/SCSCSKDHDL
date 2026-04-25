@@ -187,7 +187,7 @@ export async function exportFlightSchedule(params: ExportParams): Promise<void> 
 
   ws.mergeCells("A1:Q1");
   const t1 = ws.getCell("A1");
-  t1.value = "SUM2025 — FLIGHT SCHEDULE & HANDLING (EXPORT)";
+  t1.value = "SCSC_2026 — FLIGHT SCHEDULE & HANDLING (EXPORT)";
   t1.font = { name: "Arial", bold: true, size: 15, color: { argb: "FF000000" } };
   t1.alignment = { horizontal: "center", vertical: "middle" };
   ws.getRow(1).height = 28;
